@@ -18,11 +18,8 @@ object MovieRating {
     val sc = new SparkContext(conf)
 
     val model = MatrixFactorizationModel.load(sc, model_path)
-
     val predicted_rating = model.predict(user_id, movie_id)
-
-    val response = sc.parallelize(Array(user_id, movie_id, predicted_rating))
-
+    val response = sc.parallelize(s"user_id: $user_id, movie_id: $movie_id, predict_rating: $predicted_rating")
     response.saveAsTextFile(output_path)
 
     sc.stop()
