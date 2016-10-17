@@ -19,10 +19,12 @@ object MovieRating {
 
     val model = MatrixFactorizationModel.load(sc, model_path)
 
-    val quiz_show = Array((user_id, movie_id))
-    val my_movie = sc.parallelize(quiz_show) 
-    val individual_movie_rating_RDD = model.predict(my_movie)
+    val user_movie = Array((user_id, movie_id))
+    val movieRDD = sc.parallelize(user_movie) 
+    val individual_movie_rating_RDD = model.predict(movieRDD)
 
     individual_movie_rating_RDD.saveAsTextFile(output_path)
+
+    sc.stop()
   }
 }
