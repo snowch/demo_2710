@@ -25,11 +25,11 @@ object MovieRating {
     val predicted_rating = model.predict(user_id, movie_id)
 
     // package up the predicted rating so we can save it
-    val rating = Rating(user_id, movie_id, predicted_rating)
-    val response = sc.parallelize(Array(rating))
+    val rating = s"$user_id,$movie_id,$predicted_rating"
+    val ratingRDD = sc.parallelize(Array(rating))
 
     // save the predicted rating
-    response.saveAsTextFile(output_path)
+    ratingRDD.saveAsTextFile(output_path)
 
     sc.stop()
   }
