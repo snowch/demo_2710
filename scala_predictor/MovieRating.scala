@@ -29,7 +29,8 @@ object MovieRating {
     val ratingRDD = sc.parallelize(Array(rating))
 
     // save the predicted rating
-    ratingRDD.saveAsTextFile(output_path)
+    // repartition so that only one file is output
+    ratingRDD.repartition(1).saveAsTextFile(output_path)
 
     sc.stop()
   }
