@@ -18,6 +18,16 @@ libraryDependencies ++= {
     )
 }
 
+assemblyMergeStrategy in assembly := {
+  case PathList("org", "apache", "spark", xs @ _*) => MergeStrategy.first
+  case PathList("scala", xs @ _*) => MergeStrategy.discard
+  case PathList("META-INF", "maven", "org.slf4j", xs @ _* ) => MergeStrategy.first
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+
 unmanagedBase <<= baseDirectory { base => base / "lib" }
 
+assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
 
