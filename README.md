@@ -1,6 +1,6 @@
 ## Overview
 
-This demo is to be presented at World of Watson 2016 - "Accelerate Your Data Science Delivery with Integrated Notebooks and IBM BigInsights". The presentation slides are available here: [Presentation](./Presentation.pdf)
+This demo is to be presented at World of Watson 2016 - **"Accelerate Your Data Science Delivery with Integrated Notebooks and IBM BigInsights"**. The presentation slides are available here: [Presentation](./Presentation.pdf)
 
 - The purpose of this Data Science Experience (DSX) project is to show how data from IBM BigInsights on cloud can analysed using DSX notebooks. 
 - This project uses the http://grouplens.org/datasets/movielens/ ml-1m dataset to build a movie recommendation model using PySpark.
