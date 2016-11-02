@@ -79,9 +79,9 @@ object MovieRating {
             val movieId = item(1).toInt     
             val prediction = predict(userId, movieId).getOrElse(-1)
             
-            println(s"$userId, $movieId, $prediction")
+            println(s"BigInsights_Streaming_Predictor,$userId, $movieId, $prediction")
             
-            val producerRecord = new ProducerRecord[String, String](messagehub_response_topic_name, s"$userId, $movieId, $prediction")
+            val producerRecord = new ProducerRecord[String, String](messagehub_response_topic_name, s"BigInsights_Streaming_Predictor,$userId, $movieId, $prediction")
             kafkaProducer.send( producerRecord );
         }
     })
