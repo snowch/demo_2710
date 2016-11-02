@@ -62,8 +62,14 @@ A kafka-python client is then used to produce and consume messages.<br>
 
 #### Step 9 - Scala spark streaming on DSX
 
-In this step we create a scala spark streaming listener than consumes the messages sent to MessageHub in the previous step.<br>
+In this step we create a scala spark streaming listener that consumes the messages sent to MessageHub in the previous step.<br>
 [[Notebook link]](Step 09 - Scala spark streaming on DSX.ipynb)
+
+
+#### Step 10 - Export Spark Streaming model to BigI.ipynb
+
+This step creates a spark scala library version of Step 8 that consumes the messages sent to MessageHub, makes predictions from those messages and puts the response back on MessageHub.<br>
+[[Notebook link]](Step 10 - Export Spark Streaming model to BigI.ipynb)
 
 ## Support
 
