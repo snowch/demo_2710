@@ -22,48 +22,48 @@ If you don't want to use BigInsights, you can jump to Step 4, uncomment the firs
 #### Step 1 - Provision BigInsights cluster
 
 This notebook shows you how to provision a BigInsights on cloud cluster on Bluemix.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/47cdae41-3c37-45ea-a8db-d769d09cf484/view?access_token=3b9b2ede82ac488e87841ecb7e2b4327a9048e3741c5371b5e926adffa59fb9b)<br>
+[[Notebook link]](Step 01 - Provision BigInsights cluster.ipynb)<br>
 
 #### Step 2 - Setup BigInsights with MovieLens data
 
 The cluster is then loaded with the movielens ml-1m dataset using this notebook. <br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/648aa475-9487-4370-8529-e77c483e2df4/view?access_token=7b941a2e1fd5918ee47ae23142975a21c4b8c0219bc6fe2ee9f8c45697eee547)
+[[Notebook link]](Step 02 - Setup BigInsights with MovieLens data.ipynb)
 
 #### Step 3 - Import data from BigInsights to DSX
 
 In this step, we import the BigInsights ml-1m dataset into DSX.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/7ee23699-7654-40a3-aa84-069bdf04706d/view?access_token=582a2a971aed9b4176f75392dd9db162a166d3b33c3cdf872db0f92475215fe3)
+[[Notebook link]](Step 03 - Import data from BigInsights to DSX.ipynb)
 
 #### Step 4 - Exploratory analysis
 
 In this notebook, we perform some basic exploratory analysis of the ml-1m dataset before we jump into machine learning.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/4187e63f-b688-4a7f-b2be-409d60beac34/view?access_token=a2d278d7ca116266ab4085968fa1bb88ff86ba649369bc220889a5f36f50c1ef)
+[[Notebook link]](Step 04 - Exploratory analysis.ipynb)
 
 #### Step 5 - Train model
 
 Here we use Spark's Machine Learning Library (MLlib) to train a machine learning model on the data.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/78ec9a65-b494-47dc-b8c3-5593dae524c9/view?access_token=733c997ae7e98e9eee7bea702c4e969640355db9f2108cef1911d63cfdad7475)
+[[Notebook link]](Step 05 - Train model.ipynb)
 
 #### Step 6 - Predict ratings
 
 In this notebook, we simulate a new user's movie ratings and then use those ratings to predice movies for them.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/2141592d-a551-4212-aa71-56558852e833/view?access_token=d82308453c0027068822216cdacc731ea4074f3431d1712dff68d164be4accd1)
+[[Notebook link]](Step 06 - Predict ratings.ipynb)
 
 #### Step 7 - Export Spark model to BigInsights
 
 This notebook exports the model built in the previous notebook. <br/>A scala spark job is then run on BigInsights that loads the model and predicts a rating for a user.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/12438a01-acac-4b94-a1b8-663f3091cc4a/view?access_token=98baa449cbe5a3dfbea41055c236a490f450960cdb84468ba4f7fd54b7b14298)
+[[Notebook link]](Step 07 - Export Spark model to BigInsights.ipynb)
 
 #### Step 8 - Setup MessageHub (kafka)
 
 This notebook uses the cloud foundry rest API to provision a MessageHub service instance.<br>
 A kafka-python client is then used to produce and consume messages.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/9ce45745-aab4-47db-af3a-751cb1e79e74/view?access_token=42d36e4ef734f268778fae315eae78493995e7065f6f752427b7eabc6873b65f)
+[[Notebook link]](Step 08 - Setup MessageHub (kafka).ipynb)
 
 #### Step 9 - Scala spark streaming on DSX
 
 In this step we create a scala spark streaming listener than consumes the messages sent to MessageHub in the previous step.<br>
-[[Notebook link]](https://apsportal.ibm.com/analytics/notebooks/fea000bc-b422-49cb-a5d6-56ec40edfb48/view?access_token=6fa9ea382a2563ff25e4e0bf06eae997063e4ae11af44686e8750089b520c2a1)
+[[Notebook link]](Step 09 - Scala spark streaming on DSX.ipynb)
 
 ## Support
 
