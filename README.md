@@ -19,57 +19,57 @@ The project is split into a number of different notebooks that focus on specific
 If you don't want to use BigInsights, you can jump to Step 4, uncomment the first cell and run it to setup your data.
 
 
-#### Step 1 - Provision BigInsights cluster
+#### Step 1 - Provision BigInsights cluster [[Notebook link]](Step 01 - Provision BigInsights cluster.ipynb)
 
 This notebook shows you how to provision a BigInsights on cloud cluster on Bluemix.<br>
-[[Notebook link]](Step 01 - Provision BigInsights cluster.ipynb)<br>
+<br>
 
-#### Step 2 - Setup BigInsights with MovieLens data
+#### Step 2 - Setup BigInsights with MovieLens data [[Notebook link]](Step 02 - Setup BigInsights with MovieLens data.ipynb)
 
 The cluster is then loaded with the movielens ml-1m dataset using this notebook. <br>
-[[Notebook link]](Step 02 - Setup BigInsights with MovieLens data.ipynb)
 
-#### Step 3 - Import data from BigInsights to DSX
+
+#### Step 3 - Import data from BigInsights to DSX [[Notebook link]](Step 03 - Import data from BigInsights to DSX.ipynb)
 
 In this step, we import the BigInsights ml-1m dataset into DSX.<br>
-[[Notebook link]](Step 03 - Import data from BigInsights to DSX.ipynb)
 
-#### Step 4 - Exploratory analysis
+
+#### Step 4 - Exploratory analysis [[Notebook link]](Step 04 - Exploratory analysis.ipynb)
 
 In this notebook, we perform some basic exploratory analysis of the ml-1m dataset before we jump into machine learning.<br>
-[[Notebook link]](Step 04 - Exploratory analysis.ipynb)
 
-#### Step 5 - Train model
+
+#### Step 5 - Train model [[Notebook link]](Step 05 - Train model.ipynb)
 
 Here we use Spark's Machine Learning Library (MLlib) to train a machine learning model on the data.<br>
-[[Notebook link]](Step 05 - Train model.ipynb)
 
-#### Step 6 - Predict ratings
+
+#### Step 6 - Predict ratings [[Notebook link]](Step 06 - Predict ratings.ipynb)
 
 In this notebook, we simulate a new user's movie ratings and then use those ratings to predice movies for them.<br>
-[[Notebook link]](Step 06 - Predict ratings.ipynb)
 
-#### Step 7 - Export Spark model to BigInsights
+
+#### Step 7 - Export Spark model to BigInsights [[Notebook link]](Step 07 - Export Spark model to BigInsights.ipynb)
 
 This notebook exports the model built in the previous notebook. <br/>A scala spark job is then run on BigInsights that loads the model and predicts a rating for a user.<br>
-[[Notebook link]](Step 07 - Export Spark model to BigInsights.ipynb)
 
-#### Step 8 - Setup MessageHub (kafka)
+
+#### Step 8 - Setup MessageHub (kafka) [[Notebook link]](Step 08 - Setup MessageHub (kafka).ipynb)
 
 This notebook uses the cloud foundry rest API to provision a MessageHub service instance.<br>
 A kafka-python client is then used to produce and consume messages.<br>
-[[Notebook link]](Step 08 - Setup MessageHub (kafka).ipynb)
 
-#### Step 9 - Scala spark streaming on DSX
+
+#### Step 9 - Scala spark streaming on DSX [[Notebook link]](Step 09 - Scala spark streaming on DSX.ipynb)
 
 In this step we create a scala spark streaming listener that consumes the messages sent to MessageHub in the previous step.<br>
-[[Notebook link]](Step 09 - Scala spark streaming on DSX.ipynb)
 
 
-#### Step 10 - Export Spark Streaming model to BigI.ipynb
+
+#### Step 10 - Export Spark Streaming model to BigI.ipynb [[Notebook link]](Step 10 - Export Spark Streaming model to BigI.ipynb)
 
 This step creates a spark scala library version of Step 8 that consumes the messages sent to MessageHub, makes predictions from those messages and puts the response back on MessageHub.<br>
-[[Notebook link]](Step 10 - Export Spark Streaming model to BigI.ipynb)
+
 
 ## Support
 
