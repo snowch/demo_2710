@@ -1,3 +1,5 @@
 #!/bin/bash
 
-python hello.py runserver
+export VCAP_SERVICES=$(cat vcap.json)
+
+python hello.py runserver -d

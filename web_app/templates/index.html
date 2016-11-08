@@ -5,7 +5,16 @@
 
 {% block page_content %}
 <div class="page-header">
-    <h1>Hello, {% if name %}{{ name }}{% else %}Stranger{% endif %}!</h1>
+    <h1>Search string: {% if name %}{{ name }}{% else %}n/a{% endif %}!</h1>
 </div>
+
+<ul class=entries>
+  {% for album in albums %}
+    <li>{{ album['artist'] }} - {{ album['title'] }}
+  {% else %}
+    <li><em>No albums found</em>
+  {% endfor %}
+</ul>
+
 {{ wtf.quick_form(form) }}
 {% endblock %}
