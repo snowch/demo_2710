@@ -9,11 +9,13 @@
 </div>
 
 <ul class=entries>
+{% if albums %}
   {% for album in albums %}
     <li>{{ album['artist'] }} - {{ album['title'] }}
-  {% else %}
-    <li><em>No albums found</em>
   {% endfor %}
+{% else %}
+    <li><em>No albums found</em>
+{% endif %}
 </ul>
 
 <hr>

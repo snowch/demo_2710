@@ -4,3 +4,7 @@ applications:
   memory: 128M
   instances: 1
   path: .
+  buildpack: https://github.com/cloudfoundry/buildpack-python.git
+  command: python hello.py runserver
+  services:
+  - my_cloudant

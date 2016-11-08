@@ -9,7 +9,6 @@ import os, json
 import requests
 
 port = os.getenv('VCAP_APP_PORT', '5000')
-vcap = json.loads(os.getenv("VCAP_SERVICES"))['cloudantNoSQLDB']
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
@@ -23,12 +22,13 @@ bootstrap = Bootstrap(app)
 moment = Moment(app)
 
 try:
+    vcap = json.loads(os.getenv("VCAP_SERVICES"))['cloudantNoSQLDB']
     cl_user = vcap[0]['credentials']['username']
     cl_pass = vcap[0]['credentials']['password']
     cl_url  = vcap[0]['credentials']['url']
     auth    = ( cl_user, cl_pass )
 except:
-    raise 'A Cloudant service is not bound to the application.  Please bind a Cloudant service and try again.'
+    print('A Cloudant service is not bound to the application.  Please bind a Cloudant service and try again.')
 
 class NameForm(Form):
     name = StringField('Enter search string', validators=[Required()])
