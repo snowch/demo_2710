@@ -31,7 +31,7 @@ except:
     raise 'A Cloudant service is not bound to the application.  Please bind a Cloudant service and try again.'
 
 class NameForm(Form):
-    name = StringField('What is your name?', validators=[Required()])
+    name = StringField('Enter search string', validators=[Required()])
     submit = SubmitField('Submit')
 
 
@@ -51,20 +51,27 @@ def index():
     form = NameForm()
     if form.validate_on_submit():
         old_name = session.get('name')
-        if old_name is not None and old_name != form.name.data:
-            flash('Looks like you have changed your name!')
+        #if old_name is not None and old_name != form.name.data:
+        #    flash('Looks like you have changed your name!')
         session['name'] = form.name.data
         qry = { 
             "selector": {
               "$text": session.get('name')
             }
         }
-        response = requests.post(cl_url + '/musicdb/_find', auth=auth, data=json.dumps(qry), headers={'Content-Type':'application/json'})
+        response = requests.post(cl_url + '/musicdb/_find', 
+                    auth=auth, 
+                    data=json.dumps(qry), 
+                    headers={'Content-Type':'application/json'})
+
         response.raise_for_status()
         session['albums'] = json.loads(response.text)['docs']
         return redirect(url_for('index'))
 
-    return render_template('index.html', form=form, name=session.get('name'), albums=session.get('albums'))
+    return render_template('index.html', 
+            form=form, 
+            name=session.get('name'), 
+            albums=session.get('albums'))
 
 
 if __name__ == '__main__':
