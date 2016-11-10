@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for
+from flask import Flask, render_template, session, redirect, url_for, make_response
 from . import forms
 from . import models
 from .. import app
@@ -26,3 +26,6 @@ def index():
             name=session.get('name'), 
             albums=session.get('albums'))
 
+@app.route('/recommendations', methods=['GET', 'POST'])
+def recommendations():
+    return render_template('coming_soon.html')
