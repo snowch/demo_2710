@@ -1,8 +1,8 @@
 from flask.ext.script import Manager, Server
 from app import app
-import os
+import config
 
-port = os.getenv('VCAP_APP_PORT', '5000')
+port = app.config['PORT']
 server = Server(host="0.0.0.0", port=port)
 
 manager = Manager(app)

@@ -13,16 +13,6 @@ def page_not_found(e):
 def internal_server_error(e):
     return render_template('500.html'), 500
 
-try:
-    vcap = json.loads(os.getenv("VCAP_SERVICES"))['cloudantNoSQLDB']
-    cl_user = vcap[0]['credentials']['username']
-    cl_pass = vcap[0]['credentials']['password']
-    cl_url  = vcap[0]['credentials']['url']
-    auth    = ( cl_user, cl_pass )
-except:
-    print('A Cloudant service is not bound to the application.  Please bind a Cloudant service and try again.')
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
 
@@ -37,8 +27,8 @@ def index():
               "$text": session.get('name')
             }
         }
-        response = requests.post(cl_url + '/musicdb/_find', 
-                    auth=auth, 
+        response = requests.post(app.config['CL_URL'] + '/musicdb/_find', 
+                    auth=app.config['CL_AUTH'], 
                     data=json.dumps(qry), 
                     headers={'Content-Type':'application/json'})
 
