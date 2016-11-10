@@ -17,5 +17,6 @@ moment = Moment(app)
 
 from . import views
 from . import main
+from . import auth
 
 

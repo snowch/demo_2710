@@ -14,11 +14,11 @@ def index():
         session['albums'] = models.Albums.find_albums(session.get('name'))
         return redirect(url_for('main.index'))
 
-    return render_template('index.html', 
+    return render_template('/main/index.html', 
             form=form, 
             name=session.get('name'), 
             albums=session.get('albums'))
 
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
-    return render_template('coming_soon.html')
+    return render_template('/main/coming_soon.html')
