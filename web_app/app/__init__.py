@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for, flash
+from flask import Flask, render_template
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.moment import Moment
 from flask_sslify import SSLify
@@ -15,5 +15,7 @@ login_manager.init_app(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 
-from .main import views
-from .main import forms
+from . import views
+from . import main
+
+

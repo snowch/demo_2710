@@ -22,10 +22,10 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a href="{{ url_for('index') }}">Rate Albums</a></li>
+                <li><a href="{{ url_for('main.index') }}">Rate Albums</a></li>
             </ul>
             <ul class="nav navbar-nav">
-                <li><a href="{{ url_for('recommendations') }}">Recommendations</a></li>
+                <li><a href="{{ url_for('main.recommendations') }}">Recommendations</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
@@ -35,13 +35,13 @@
                         Account <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{{ url_for('index') }}">Change Password</a></li>
-                        <li><a href="{{ url_for('index') }}">Change Email</a></li>
-                        <li><a href="{{ url_for('index') }}">Log Out</a></li>
+                        <li><a href="{{ url_for('main.index') }}">Change Password</a></li>
+                        <li><a href="{{ url_for('main.index') }}">Change Email</a></li>
+                        <li><a href="{{ url_for('main.index') }}">Log Out</a></li>
                     </ul>
                 </li>
                 {% else %}
-                <li><a href="{{ url_for('index') }}">Log In</a></li>
+                <li><a href="{{ url_for('main.index') }}">Log In</a></li>
                 {% endif %}
             </ul>
         </div>
