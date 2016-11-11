@@ -20,4 +20,4 @@ def index():
 
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
-    return render_template('/main/coming_soon.html')
+    return render_template('/main/recommendations.html')

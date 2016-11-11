@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Album Recommendations{% endblock %}
+
+{% block page_content %}
+
+<div>
+{% if current_user.is_authenticated %}
+    <b>Album recommendations coming soon...</b>
+{% else %}
+    <b>Login to get Album recommendations...</b>
+{% endif %}
+</div>
+
+{% endblock %}

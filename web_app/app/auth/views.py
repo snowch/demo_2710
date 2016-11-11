@@ -20,6 +20,13 @@ def login():
 
     return render_template('auth/login.html', form=form)
 
+@auth.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('main.index'))
+
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()

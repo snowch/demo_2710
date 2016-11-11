@@ -8,9 +8,9 @@ server = Server(host="0.0.0.0", port=port)
 manager = Manager(app)
 manager.add_command("runserver", server)
 
-# debug routes
-#for rule in app.url_map.iter_rules():
-#    print(rule.endpoint, rule)
+# uncomment to debug routes:
+# for rule in app.url_map.iter_rules():
+#     print(rule.endpoint, rule)
 
 if __name__ == '__main__':
     manager.run()
