@@ -32,12 +32,15 @@ class User(UserMixin):
     id = ''
     email = ''
     password_hash = ''
-    confirmed = ''
+    confirmed = False
 
-    def __init__(self, email, password):
+    def __init__(self, email, password=None, password_hash=None):
         self.id = email
         self.email = email
-        self.password_hash = generate_password_hash(password)
+        if password_hash:
+            self.password_hash = password_hash
+        else:
+            self.password_hash = generate_password_hash(password)
 
     @property
     def password(self):
@@ -146,6 +149,19 @@ class User(UserMixin):
 
         response.raise_for_status()
 
+    @staticmethod
+    def find_by_email(email):
+
+        response = requests.get(app.config['CL_URL'] + '/authdb/' + email, 
+            auth=app.config['CL_AUTH'], 
+            headers={'Content-Type':'application/json'})
+
+        if response.status_code == 200:
+            password_hash = response.json()['password_hash']
+            user = User(email, password_hash=password_hash)
+            return user
+        else:
+            return None
 
 class AnonymousUser(AnonymousUserMixin):
     def can(self, permissions):
@@ -159,6 +175,6 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.find_by_email(user_id)
 
 

@@ -31,12 +31,10 @@
                 {% if current_user.is_authenticated %}
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <img src="{{ current_user.gravatar(size=18) }}">
                         Account <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{{ url_for('main.index') }}">Change Password</a></li>
-                        <li><a href="{{ url_for('main.index') }}">Change Email</a></li>
+                        <li><a href="{{ url_for('auth.login') }}">Change Password</a></li>
                         <li><a href="{{ url_for('main.index') }}">Log Out</a></li>
                     </ul>
                 </li>
