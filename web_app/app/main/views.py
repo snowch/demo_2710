@@ -1,9 +1,8 @@
 from flask import Flask, render_template, session, redirect, url_for 
 from . import forms
 from . import main 
-from . import models
 from .. import app
-
+from .. import models
 
 @main.route('/', methods=['GET', 'POST'])
 def index():

@@ -1,6 +1,6 @@
 import os, json
 import requests
-from .. import app
+from . import app
 
 class Albums:
 
