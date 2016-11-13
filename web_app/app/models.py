@@ -45,11 +45,21 @@ class Album:
                     auth=app.config['CL_AUTH'], 
                     data=json.dumps(qry), 
                     headers={'Content-Type':'application/json'})
+        
+        album_docs = json.loads(response.text)['docs']
+        album_ids = [ doc['_id'] for doc in album_docs ]
+
+        response = requests.get(app.config['CL_URL'] + '/ratingdb/_find', 
+                    auth=app.config['CL_AUTH'], 
+                    data=json.dumps(qry), 
+                    headers={'Content-Type':'application/json'})
+        
 
         albums = []
-        for doc in json.loads(response.text)['docs']:
+        for doc in album_docs:
             album = Album(doc['_id'], doc['artist'], doc['title'])
             albums.append(album)
+            album_ids.append(album.album_id)
 
         return albums
 
