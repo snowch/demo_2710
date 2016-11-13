@@ -4,9 +4,6 @@
 {% block title %}Music recommender{% endblock %}
 
 {% block page_content %}
-<div class="page-header">
-    <h1>Search string: <em>{% if name %}{{ name }}{% else %}n/a{% endif %}</em></h1>
-</div>
 
 <ul class=entries>
 {% if albums %}
@@ -14,11 +11,10 @@
     <li>{{ album['artist'] }} - {{ album['title'] }}
   {% endfor %}
 {% else %}
-    <li><em>No albums found</em>
+    <li><em>No records found - search for artist or album to continue.</em>
 {% endif %}
 </ul>
 
 <hr>
 
-{{ wtf.quick_form(form) }}
 {% endblock %}
