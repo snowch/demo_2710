@@ -2,15 +2,14 @@ from flask import Flask, render_template, session, redirect, url_for
 from . import forms
 from . import main 
 from .. import app
-from .. import models
+from ..models import Album
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
 
     search_string = session.get('search_string') 
-    print('search_string', search_string)
     if search_string:
-        session['albums'] = models.Albums.find_albums(session.get('search_string'))
+        session['albums'] = Album.find_albums(session.get('search_string'))
     else:
         session['albums'] = []
 
@@ -26,5 +25,4 @@ def recommendations():
 def set_search_string():
     form = forms.SearchForm()
     session['search_string'] = form.search_string.data
-    print(" session['search_string']",  session['search_string'])
     return redirect(url_for('main.index'))

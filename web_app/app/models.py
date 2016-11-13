@@ -2,13 +2,36 @@ from datetime import datetime
 import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app, request, url_for
+from flask import current_app, request, url_for, jsonify
 from flask.ext.login import UserMixin, AnonymousUserMixin
 import os, json
 import requests
 from . import app, login_manager
 
-class Albums:
+from flask.json import JSONEncoder
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Album):
+            return obj.as_dict()
+        else:
+            JSONEncoder.default(self, obj)
+
+app.json_encoder = CustomJSONEncoder
+
+class Album:
+
+    def __init__(self, album_id, artist, title):
+        self.album_id = album_id
+        self.artist = artist
+        self.title = title
+
+    def as_dict(self):
+        return dict(
+                    album_id=self.album_id,
+                    artist=self.artist,
+                    title=self.title
+                )
 
     @staticmethod
     def find_albums(name):
@@ -23,8 +46,12 @@ class Albums:
                     data=json.dumps(qry), 
                     headers={'Content-Type':'application/json'})
 
-        return json.loads(response.text)['docs']
+        albums = []
+        for doc in json.loads(response.text)['docs']:
+            album = Album(doc['_id'], doc['artist'], doc['title'])
+            albums.append(album)
 
+        return albums
 
 
 class User(UserMixin):
