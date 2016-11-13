@@ -8,7 +8,7 @@
 <ul class=entries>
 {% if albums %}
   {% for album in albums %}
-    <li>{{ album['artist'] }} - {{ album['title'] }}
+    <li>{{ album.artist }} - {{ album.title }}
   {% endfor %}
 {% else %}
     <li><em>No records found - search for artist or album to continue.</em>

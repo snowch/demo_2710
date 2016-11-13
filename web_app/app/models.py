@@ -3,12 +3,12 @@ import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, request, url_for, jsonify
+from flask.json import JSONEncoder
 from flask.ext.login import UserMixin, AnonymousUserMixin
 import os, json
 import requests
 from . import app, login_manager
 
-from flask.json import JSONEncoder
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
