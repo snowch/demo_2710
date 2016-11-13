@@ -3,4 +3,4 @@ vcap.json
 __pycache__/
 *.py[cod]
 
-.swp
+*.swp
