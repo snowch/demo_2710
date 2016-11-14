@@ -42,5 +42,8 @@ def set_rating():
     user_id  = request.json['user_id']
     rating   = request.json['rating']
 
+    if rating == '-':
+        return('{ "success": "ignored_as_value_not_changed" }')
+
     Album.save_rating(album_id, user_id, int(rating))
-    return("{ok}")
+    return('{ "success": "true" }')

@@ -60,10 +60,15 @@
 {{ super() }}
 <script type="text/javascript">
 
+// FIXME: the approach for flashing the Saving and Saved messages is clunky
 $(".rating-selector").on('change', function () {
     var album_id = this.id;
     var user_id  = this.dataset.userid;
     var rating   = this.value;
+
+    var select_element = this;
+    $(select_element).hide()
+    $(select_element).parent().append('<span class="saving-note">Saving</span>')
 
     $.ajax({
         url: "{{ url_for('main.set_rating') }}",
@@ -76,7 +81,13 @@ $(".rating-selector").on('change', function () {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(){
-          $(this).addClass("done");
+            $(".saving-note").remove();
+            $(select_element).parent().append('<span class="saving-note">Saved</span>')
+
+            setTimeout(function(){
+                $(".saving-note").remove();
+                $(select_element).show();
+            }, 1000);
         }
     });
 });
