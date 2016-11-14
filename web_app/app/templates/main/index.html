@@ -29,7 +29,16 @@
       <td>{{ album.artist }}</td>
       <td>{{ album.title }}</td>
       {% if current_user.is_authenticated %}
-      <td>{{ album.rating if album.rating else "Not rated." }}</td>
+      <td>
+          <select id="{{ album.album_id }}">
+            <option value="-" {% if album.rating == None %}selected="selected"{% endif %}>-</option>
+            <option value="1" {% if album.rating == 1 %}selected="selected"{% endif %}>1</option>
+            <option value="2" {% if album.rating == 2 %}selected="selected"{% endif %}>2</option>
+            <option value="3" {% if album.rating == 3 %}selected="selected"{% endif %}>3</option>
+            <option value="4" {% if album.rating == 4 %}selected="selected"{% endif %}>4</option>
+            <option value="5" {% if album.rating == 5 %}selected="selected"{% endif %}>5</option>
+          </select> 
+      </td>
       {% endif %}
   </tr>
   {% endfor %}
