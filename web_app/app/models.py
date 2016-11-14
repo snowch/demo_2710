@@ -98,8 +98,7 @@ class Album:
             data = response.json()
 
             if 'docs' in data:
-                docs = response.json()['docs']
-                for doc in docs:
+                for doc in data['docs']:
                     album_id = doc['album_id']
                     rating   = doc['rating']
                     timestamp = doc['timestamp']
