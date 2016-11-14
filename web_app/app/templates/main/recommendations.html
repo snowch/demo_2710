@@ -8,7 +8,7 @@
 {% if current_user.is_authenticated %}
     <b>Album recommendations coming soon...</b>
 {% else %}
-    <b>Login to get Album recommendations...</b>
+    <b><a href="{{ url_for('auth.login') }}">Login</a> to get Album recommendations...</b>
 {% endif %}
 </div>
 

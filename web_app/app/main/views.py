@@ -21,7 +21,7 @@ def index():
 def recommendations():
     return render_template('/main/recommendations.html')
 
-@main.route('/set_search_string', methods=['GET', 'POST'])
+@main.route('/set_search_string', methods=['POST'])
 def set_search_string():
     form = forms.SearchForm()
     session['search_string'] = form.search_string.data

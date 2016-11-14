@@ -5,15 +5,38 @@
 
 {% block page_content %}
 
-<ul class=entries>
+{% if not current_user.is_authenticated %}
+<b>Your album ratings are not displayed.</b><br>
+<a href="{{ url_for('auth.login') }}">Login</a> to show your ratings...
+<hr/>
+{% endif %}
+
 {% if albums %}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Artist</th>
+      <th>Title</th>
+      {% if current_user.is_authenticated %}
+      <th>Your Rating</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
   {% for album in albums %}
-    <li>{{ album.artist }} - {{ album.title }}
+  <tr>
+      <td>{{ album.artist }}</td>
+      <td>{{ album.title }}</td>
+      {% if current_user.is_authenticated %}
+      <td>{{ album.rating if album.rating else "Not rated." }}</td>
+      {% endif %}
+  </tr>
   {% endfor %}
+  </tbody>
+</table>
 {% else %}
     <li><em>No records found - search for artist or album to continue.</em>
 {% endif %}
-</ul>
 
 <hr>
 

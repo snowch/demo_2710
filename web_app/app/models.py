@@ -2,12 +2,15 @@ from datetime import datetime
 import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app, request, url_for, jsonify
+from flask import g, current_app, request, url_for, jsonify
 from flask.json import JSONEncoder
-from flask.ext.login import UserMixin, AnonymousUserMixin
+from flask.ext.login import UserMixin, AnonymousUserMixin, current_user
 import os, json
 import requests
 from . import app, login_manager
+
+MUSICDB_URL  = app.config['CL_URL'] + '/' + app.config['CL_MUSICDB']
+RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
 
 
 class CustomJSONEncoder(JSONEncoder):
@@ -21,16 +24,21 @@ app.json_encoder = CustomJSONEncoder
 
 class Album:
 
+
     def __init__(self, album_id, artist, title):
         self.album_id = album_id
         self.artist = artist
         self.title = title
+        self.rating = None
+        self.rating_timestamp = None
 
     def as_dict(self):
         return dict(
                     album_id=self.album_id,
                     artist=self.artist,
-                    title=self.title
+                    title=self.title,
+                    rating=self.rating,
+                    rating_timestamp=self.rating_timestamp
                 )
 
     @staticmethod
@@ -41,7 +49,7 @@ class Album:
               "$text": name
             }
         }
-        response = requests.post(app.config['CL_URL'] + '/musicdb/_find', 
+        response = requests.post(MUSICDB_URL + '/_find', 
                     auth=app.config['CL_AUTH'], 
                     data=json.dumps(qry), 
                     headers={'Content-Type':'application/json'})
@@ -49,19 +57,54 @@ class Album:
         album_docs = json.loads(response.text)['docs']
         album_ids = [ doc['_id'] for doc in album_docs ]
 
-        response = requests.get(app.config['CL_URL'] + '/ratingdb/_find', 
-                    auth=app.config['CL_AUTH'], 
-                    data=json.dumps(qry), 
-                    headers={'Content-Type':'application/json'})
-        
-
-        albums = []
+        albums = {}
         for doc in album_docs:
             album = Album(doc['_id'], doc['artist'], doc['title'])
-            albums.append(album)
-            album_ids.append(album.album_id)
+            albums[album.album_id] = album
+            #print(doc['_id'], doc['artist'], doc['title'])
 
-        return albums
+        if current_user:
+            # FIXME: cloudant query appears to be broken so we filter data
+            # in our application code. cloudant M/R index will probably be
+            # better here
+            current_user_id = current_user.get_id()
+            qry = { 
+                  "selector": {
+                       "user_id": { "$eq": current_user_id },
+                       "album_id": { "$in": album_ids },
+                       "timestamp": { "$gt": None }
+                  },
+                  "fields": [ "user_id", "album_id", "timestamp", "rating" ],
+                  #"sort": [ 
+                  #    { "user_id": "desc" },
+                  #    { "album_id": "desc" },
+                  #    { "timestamp": "desc" }
+                  #],
+                  #"limit": 1
+            }
+            # print(json.dumps(qry))
+            response = requests.post(RATINGDB_URL + '/_find', 
+                        auth=app.config['CL_AUTH'], 
+                        data=json.dumps(qry), 
+                        headers={'Content-Type':'application/json'})
+
+            # add rating to album if exists filtering out older timestamps
+            # as required due to cloudant query issue
+            docs = response.json()['docs']
+            if docs:
+                for doc in docs:
+                    album_id = doc['album_id']
+                    rating   = doc['rating']
+                    timestamp = doc['timestamp']
+                    
+                    album = albums[album_id]
+                    if album.rating_timestamp is None or \
+                       album.rating_timestamp < timestamp:
+
+                        album.rating = rating
+                        album.rating_timestamp = timestamp
+
+        return [ v for k,v in albums.items()]
 
 
 class User(UserMixin):
