@@ -83,10 +83,15 @@ class Album:
                   #"limit": 1
             }
             # print(json.dumps(qry))
+
             response = requests.post(RATINGDB_URL + '/_find', 
                         auth=app.config['CL_AUTH'], 
                         data=json.dumps(qry), 
                         headers={'Content-Type':'application/json'})
+
+            # print(response.text)
+            # FIXME see output from print statement
+            # "warning":"no matching index found, create an index to optimize query time"
 
             # add rating to album if exists filtering out older timestamps
             # as required due to cloudant query issue
