@@ -95,8 +95,10 @@ class Album:
 
             # add rating to album if exists filtering out older timestamps
             # as required due to cloudant query issue
-            docs = response.json()['docs']
-            if docs:
+            data = response.json()
+
+            if 'docs' in data:
+                docs = response.json()['docs']
                 for doc in docs:
                     album_id = doc['album_id']
                     rating   = doc['rating']
