@@ -7,7 +7,10 @@ from flask.json import JSONEncoder
 from flask.ext.login import UserMixin, AnonymousUserMixin, current_user
 import os, json
 import requests
+import time
 from . import app, login_manager
+
+current_milli_time = lambda: int(round(time.time() * 1000))
 
 MUSICDB_URL  = app.config['CL_URL'] + '/' + app.config['CL_MUSICDB']
 RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
@@ -24,7 +27,6 @@ app.json_encoder = CustomJSONEncoder
 
 class Album:
 
-
     def __init__(self, album_id, artist, title):
         self.album_id = album_id
         self.artist = artist
@@ -40,6 +42,24 @@ class Album:
                     rating=self.rating,
                     rating_timestamp=self.rating_timestamp
                 )
+
+    @staticmethod
+    def save_rating(album_id, user_id, rating):
+        data = {
+            "album_id": album_id,
+            "user_id": user_id,
+            "rating": rating,
+            "timestamp": current_milli_time()
+        }
+        response = requests.post(
+                RATINGDB_URL,
+                auth=app.config['CL_AUTH'], 
+                data=json.dumps(data), 
+                headers={'Content-Type':'application/json'})
+
+        # print(response.text)
+        # TODO check response
+        response.raise_for_status()
 
     @staticmethod
     def find_albums(name):
@@ -61,7 +81,7 @@ class Album:
         for doc in album_docs:
             album = Album(doc['_id'], doc['artist'], doc['title'])
             albums[album.album_id] = album
-            #print(doc['_id'], doc['artist'], doc['title'])
+            # print(doc['_id'], doc['artist'], doc['title'])
 
         if current_user:
             # FIXME: cloudant query appears to be broken so we filter data

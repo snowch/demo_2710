@@ -24,7 +24,8 @@ def create_dbs():
                 print( 'Error creating ', db, response.text )
             else:
                 if db == CL_RATINGDB: 
-                    create_test_ratingdb_doc()
+                    # create_test_ratingdb_doc()
+                    pass
 
 def create_test_ratingdb_doc():
     import random

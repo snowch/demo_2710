@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
+
 {% block title %}Music recommender{% endblock %}
 
 {% block page_content %}
@@ -30,7 +31,8 @@
       <td>{{ album.title }}</td>
       {% if current_user.is_authenticated %}
       <td>
-          <select id="{{ album.album_id }}">
+          <!-- TODO: crsf protection -->
+          <select id="{{ album.album_id }}" data-userid="{{ current_user.get_id() }}" class="rating-selector">
             <option value="-" {% if album.rating == None %}selected="selected"{% endif %}>-</option>
             <option value="1" {% if album.rating == 1 %}selected="selected"{% endif %}>1</option>
             <option value="2" {% if album.rating == 2 %}selected="selected"{% endif %}>2</option>
@@ -51,3 +53,34 @@
 <hr>
 
 {% endblock %}
+
+
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript">
+
+$(".rating-selector").on('change', function () {
+    var album_id = this.id;
+    var user_id  = this.dataset.userid;
+    var rating   = this.value;
+
+    $.ajax({
+        url: "{{ url_for('main.set_rating') }}",
+        type: "POST",
+        data: JSON.stringify({
+            "album_id": album_id, 
+            "user_id":  user_id,
+            "rating":   rating
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(){
+          $(this).addClass("done");
+        }
+    });
+});
+</script>
+{% endblock %}
+
+
