@@ -27,20 +27,32 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('main.index'))
 
+
+@auth.route('/change_password')
+@login_required
+def change_password():
+    return render_template('/not_implemented_yet.html')
+
+
+@auth.route('/reset_password')
+def reset_password():
+    return render_template('/not_implemented_yet.html')
+
+
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
 
     if form.validate_on_submit():
         user = models.User(form.email.data, form.password.data)
-
         user.save()
 
         #token = user.generate_confirmation_token()
         # send_email(user.email, 'Confirm Your Account',
         #           'auth/email/confirm', user=user, token=token)
         #flash('A confirmation email has been sent to you by email.')
-        flash('Account has been created - please login.')
+
+        flash('Your account has been created - please login.')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
 
