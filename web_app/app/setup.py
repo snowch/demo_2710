@@ -15,7 +15,6 @@ def create_dbs():
 
     # TODO use flask logging rather than print()
     for db in [CL_MUSICDB, CL_AUTHDB, CL_RATINGDB]:
-        response = requests.get( CL_URL+'/'+db, auth=CL_AUTH )
 
         if db in dbs:
             print('Found database', db)
