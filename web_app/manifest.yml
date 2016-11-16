@@ -1,6 +1,6 @@
 applications:
 - name: music-recommender-flask
-  host: mrfchs
+  host: music-recommender-demo
   memory: 128M
   instances: 1
   path: .

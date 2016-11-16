@@ -1,6 +1,7 @@
 import requests, json
 
 from . import app
+from .cloudant_db import cloudant_client
 
 CL_URL      = app.config['CL_URL']
 CL_AUTH     = app.config['CL_AUTH']
@@ -9,23 +10,23 @@ CL_AUTHDB   = app.config['CL_AUTHDB']
 CL_RATINGDB = app.config['CL_RATINGDB']
 
 def create_dbs():
+
+    dbs = cloudant_client.all_dbs()
+
     # TODO use flask logging rather than print()
     for db in [CL_MUSICDB, CL_AUTHDB, CL_RATINGDB]:
         response = requests.get( CL_URL+'/'+db, auth=CL_AUTH )
 
-        if response.status_code in [200, 201, 202]:
-            print( 'Found database {0}'.format(db) )
+        if db in dbs:
+            print('Found database', db)
         else:
+            db_handle = cloudant_client.create_database(db)
 
-            print( 'Creating', db )
-            response = requests.put( CL_URL+'/'+db, auth=CL_AUTH )
-
-            if not response.status_code in [200, 201, 202]:
-                print( 'Error creating ', db, response.text )
+            if db_handle.exists():
+                print('Created database', db)
             else:
-                if db == CL_RATINGDB: 
-                    # create_test_ratingdb_doc()
-                    pass
+                print('Problem creating database', db)
+            
 
 def create_test_ratingdb_doc():
     import random
