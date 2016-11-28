@@ -24,7 +24,7 @@ class Config:
     CL_URL  = vcap[0]['credentials']['url']
     CL_AUTH = ( CL_USER, CL_PASS )
 
-    CL_MUSICDB  = 'musicdb'
+    CL_MOVIEDB  = 'moviedb'
     CL_AUTHDB   = 'authdb'
     CL_RATINGDB = 'ratingdb'
 

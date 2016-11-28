@@ -7,20 +7,19 @@ from requests.exceptions import HTTPError
 
 CL_URL      = app.config['CL_URL']
 CL_AUTH     = app.config['CL_AUTH']
-CL_MUSICDB  = app.config['CL_MUSICDB']
+CL_MOVIEDB  = app.config['CL_MOVIEDB']
 CL_AUTHDB   = app.config['CL_AUTHDB']
 CL_RATINGDB = app.config['CL_RATINGDB']
 
-# http://files.grouplens.org/datasets/movielens/ml-1m.zip
+CL_DBS = [ CL_MOVIEDB, CL_AUTHDB, CL_RATINGDB ]
+
 
 # TODO use flask logging rather than print()
 
 def delete_dbs():
 
     dbs = cloudant_client.all_dbs()
-
-    for db in [CL_MUSICDB, CL_AUTHDB, CL_RATINGDB]:
-
+    for db in CL_DBS:
         if db in dbs:
             print('Deleting database', db)
             cloudant_client.delete_database(db)
@@ -28,46 +27,63 @@ def delete_dbs():
 def create_dbs():
 
     dbs = cloudant_client.all_dbs()
-
-    for db in [CL_MUSICDB, CL_AUTHDB, CL_RATINGDB]:
-
+    for db in CL_DBS:
         if db in dbs:
             print('Found database', db)
         else:
             db_handle = cloudant_client.create_database(db)
-
             if db_handle.exists():
                 print('Created database', db)
             else:
                 print('Problem creating database', db)
-            
 
-def create_test_ratingdb_doc():
-    import random
-    import time
+def md5(fname):
+    import hashlib
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
-    current_milli_time = lambda: int(round(time.time() * 1000))
+def download_movie_data():
+    zip_filename = 'ml-1m.zip'
 
-    albums = ["bf129f0d", "380e3a05", "3d09ca05", "c912ae0d", "6b096208", "65120c09", "3709c305", "890b0b0b", "ae10d40d", "1212b314", "450a6205", "5d112207", "cc11060e", "3c0c3c05", "c70bc80f", "d40c110e", "520f7006", "c00ec30e", "3b0a6305", "4c081b06", "1b123324"]
+    import os.path
+    if os.path.isfile(zip_filename) and md5(zip_filename) == 'c4d9eecfca2ab87c1945afe126590906':
+        print("Skipping download of ml-1m.zip as it already exists") 
+    else:
+        print("Downloading ml-1m.zip")
+        import urllib.request
+        url = 'http://files.grouplens.org/datasets/movielens/ml-1m.zip'
+        urllib.request.urlretrieve(url, zip_filename)
 
-    for num_ratings in [1, 2]:
-        for album in albums:
-            for user_id in [ 'a@a.com', 'a@b.com' ]:
-                data = {
-                    "album_id": album,
-                    "user_id": user_id,
-                    "rating": random.randint(1,5),
-                    "timestamp": current_milli_time()
+    import zipfile
+    with zipfile.ZipFile(zip_filename,"r") as zip_ref:
+        zip_ref.extractall()
+
+def populate_movie_db():
+    download_movie_data()
+
+    movie_file = 'ml-1m/movies.dat'
+
+    with open(movie_file, 'r', encoding='ISO-8859-1') as f:
+        for line in f:
+            (movieid, moviename, category) = line.strip().split('::')
+
+            data = {
+                '_id': movieid,
+                'name': moviename,
+                'categories': [category.split('|')]
                 }
-                response = requests.post(
-                        CL_URL+'/'+CL_RATINGDB, 
-                        auth=CL_AUTH, 
-                        data=json.dumps(data), 
-                        headers={'Content-Type':'application/json'})
+            movie_db = cloudant_client[CL_MOVIEDB]
+            my_document = movie_db.create_document(data)
+            if my_document.exists():
+                print("Created movieid: ", movieid)
+            else:
+                print("Couldn't create movieid: ", movieid)
 
 
-
-def create_musicdb_indexes():
+def create_moviedb_indexes():
 
     ddoc_fn = '''
 function(doc){
@@ -80,7 +96,7 @@ function(doc){
   }
 }
 '''    
-    musicdb = cloudant_client[CL_MUSICDB]
+    musicdb = cloudant_client[CL_MOVIEDB]
     ddoc = DesignDocument(musicdb, 'artist-title-index')
 
     try:
