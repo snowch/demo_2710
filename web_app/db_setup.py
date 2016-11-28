@@ -65,22 +65,54 @@ def populate_movie_db():
     download_movie_data()
 
     movie_file = 'ml-1m/movies.dat'
+    
+    movie_db = cloudant_client[CL_MOVIEDB]
 
+    bulk_docs = []
     with open(movie_file, 'r', encoding='ISO-8859-1') as f:
         for line in f:
             (movieid, moviename, category) = line.strip().split('::')
 
-            data = {
+            bulk_docs.append({
                 '_id': movieid,
                 'name': moviename,
                 'categories': [category.split('|')]
-                }
-            movie_db = cloudant_client[CL_MOVIEDB]
-            my_document = movie_db.create_document(data)
-            if my_document.exists():
-                print("Created movieid: ", movieid)
+                })
+
+    resp = movie_db.bulk_docs(bulk_docs)
+    num_ok = len([ r['ok'] for r in resp if 'ok' in r ])
+    print('num saved: ', num_ok)
+
+def populate_rating_db():
+    download_movie_data()
+
+    rating_file = 'ml-1m/ratings.dat'
+    
+    rating_db = cloudant_client[CL_RATINGDB]
+
+    chunk = 0
+    bulk_docs = []
+    with open(rating_file, 'r', encoding='ISO-8859-1') as f:
+        while True:
+            line = f.readline().strip()
+
+            if not line == '':
+                (userid, movieid, rating, timestamp) = line.split('::')
+                
+                bulk_docs.append({
+                    'userid': userid,
+                    'movieid': movieid,
+                    'rating': rating
+                    })
+                chunk = chunk + 1
+
+                if chunk % 10000 == 0:
+                    resp = rating_db.bulk_docs(bulk_docs)
+                    num_ok = len([ r['ok'] for r in resp if 'ok' in r ])
+                    print('chunk: ', chunk, ' num saved: ', num_ok)
+                    bulk_docs = []
             else:
-                print("Couldn't create movieid: ", movieid)
+                break
 
 
 def create_moviedb_indexes():

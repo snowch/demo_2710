@@ -1,7 +1,7 @@
 from flask.ext.script import Manager, Server
 from app import app
 import config
-from db_setup import delete_dbs, create_dbs, populate_movie_db
+from db_setup import delete_dbs, create_dbs, populate_movie_db, populate_rating_db
 
 port = app.config['PORT']
 server = Server(host="0.0.0.0", port=port)
@@ -20,6 +20,7 @@ def db_setup():
     "Create cloudant database"
     create_dbs()
     populate_movie_db()
+    populate_rating_db()
 
 if app.debug:
     # debug routes
