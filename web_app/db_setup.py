@@ -1,4 +1,5 @@
 import requests, json
+import os.path
 
 from app import app
 from app.cloudant_db import cloudant_client
@@ -48,7 +49,6 @@ def md5(fname):
 def download_movie_data():
     zip_filename = 'ml-1m.zip'
 
-    import os.path
     if os.path.isfile(zip_filename) and md5(zip_filename) == 'c4d9eecfca2ab87c1945afe126590906':
         print("Skipping download of ml-1m.zip as it already exists") 
     else:
@@ -62,9 +62,10 @@ def download_movie_data():
         zip_ref.extractall()
 
 def populate_movie_db():
-    download_movie_data()
 
     movie_file = 'ml-1m/movies.dat'
+    if not os.path.isfile(movie_file):
+        download_movie_data()
     
     movie_db = cloudant_client[CL_MOVIEDB]
 
@@ -84,9 +85,10 @@ def populate_movie_db():
     print('num saved: ', num_ok)
 
 def populate_rating_db():
-    download_movie_data()
 
     rating_file = 'ml-1m/ratings.dat'
+    if not os.path.isfile(rating_file):
+        download_movie_data()
     
     rating_db = cloudant_client[CL_RATINGDB]
 
@@ -120,11 +122,11 @@ def create_moviedb_indexes():
     ddoc_fn = '''
 function(doc){
   index("default", doc._id);
-  if (doc.artist){
-    index("artist", doc.artist, {"store": true});
+  if (doc.name){
+    index("name", doc.name, {"store": true});
   }
-  if (doc.title){
-    index("title", doc.title, {"store": true});
+  if (doc.categories){
+    index("categories", doc.categories, {"store": true});
   }
 }
 '''    
@@ -135,7 +137,7 @@ function(doc){
         ddoc.fetch()
         ddoc.update_search_index('artist-title-index', ddoc_fn, analyzer=None)
     except HTTPError:
-        print('httperror fetching {0} design doc', 'artist-title-index')
+        print('httperror fetching {0} design doc'.format('artist-title-index'))
         ddoc.add_search_index('artist-title-index', ddoc_fn, analyzer=None)
 
     ddoc.save()
