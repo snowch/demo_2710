@@ -2,4 +2,9 @@
 
 export VCAP_SERVICES=$(cat vcap.json)
 
-python manage.py runserver -d
+if [ $# -eq 0 ]
+then
+    python manage.py runserver -d
+fi
+
+python manage.py "$@"

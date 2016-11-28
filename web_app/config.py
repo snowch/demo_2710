@@ -4,12 +4,19 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string' 
     PORT = os.getenv('VCAP_APP_PORT', '5000')
 
+    vcap_services = os.getenv("VCAP_SERVICES")
+    if not vcap_services:
+        raise BaseException(
+                'Environment variable VCAP_SERVICES was not found.\n' +
+                'VCAP_SERVICES must exist and contain the contents of the bluemix vcap.json data.'
+                )
+
     try:
-        vcap = json.loads(os.getenv("VCAP_SERVICES"))['cloudantNoSQLDB']
+        vcap = json.loads(vcap_services)['cloudantNoSQLDB']
     except:
         raise BaseException(
-            'A Cloudant service is not bound to the application.\n' +
-            'Please bind a Cloudant service and try again.'
+            'A cloudantNoSQLDB element was not found in the vcap.json.\n' +
+            'If you are running on Bluemix, do you have a Cloudant database service bound to this application?'
             )
 
     CL_USER = vcap[0]['credentials']['username']
