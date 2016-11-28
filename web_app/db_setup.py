@@ -13,12 +13,22 @@ CL_RATINGDB = app.config['CL_RATINGDB']
 
 # http://files.grouplens.org/datasets/movielens/ml-1m.zip
 
+# TODO use flask logging rather than print()
+
+def delete_dbs():
+
+    dbs = cloudant_client.all_dbs()
+
+    for db in [CL_MUSICDB, CL_AUTHDB, CL_RATINGDB]:
+
+        if db in dbs:
+            print('Deleting database', db)
+            cloudant_client.delete_database(db)
 
 def create_dbs():
 
     dbs = cloudant_client.all_dbs()
 
-    # TODO use flask logging rather than print()
     for db in [CL_MUSICDB, CL_AUTHDB, CL_RATINGDB]:
 
         if db in dbs:
@@ -83,6 +93,6 @@ function(doc){
     ddoc.save()
 
     
-create_dbs()
-create_musicdb_indexes()
+#create_dbs()
+#create_musicdb_indexes()
 #create_ratingdb_indexes()
