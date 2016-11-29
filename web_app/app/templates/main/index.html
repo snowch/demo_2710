@@ -2,11 +2,11 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 
-{% block title %}Music recommender{% endblock %}
+{% block title %}Movie recommender{% endblock %}
 
 {% block page_content %}
 
-{% if albums %}
+{% if movies %}
 
     {% if not current_user.is_authenticated %}
     <b>Album ratings are not displayed.</b><br>
@@ -17,28 +17,26 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>Artist</th>
-      <th>Title</th>
+      <th>Name</th>
       {% if current_user.is_authenticated %}
       <th>Your Rating</th>
       {% endif %}
     </tr>
   </thead>
   <tbody>
-  {% for album in albums %}
+  {% for movie in movies %}
   <tr>
-      <td>{{ album.artist }}</td>
-      <td>{{ album.title }}</td>
+      <td>{{ movie['name'] }}</td>
       {% if current_user.is_authenticated %}
       <td>
           <!-- TODO: crsf protection -->
-          <select id="{{ album.album_id }}" data-userid="{{ current_user.get_id() }}" class="rating-selector">
-            <option value="-" {% if album.rating == None %}selected="selected"{% endif %}>-</option>
-            <option value="1" {% if album.rating == 1 %}selected="selected"{% endif %}>1</option>
-            <option value="2" {% if album.rating == 2 %}selected="selected"{% endif %}>2</option>
-            <option value="3" {% if album.rating == 3 %}selected="selected"{% endif %}>3</option>
-            <option value="4" {% if album.rating == 4 %}selected="selected"{% endif %}>4</option>
-            <option value="5" {% if album.rating == 5 %}selected="selected"{% endif %}>5</option>
+          <select id="{{ movie.movie_id }}" data-userid="{{ current_user.get_id() }}" class="rating-selector">
+            <option value="-" {% if movie.rating == None %}selected="selected"{% endif %}>-</option>
+            <option value="1" {% if movie.rating == 1 %}selected="selected"{% endif %}>1</option>
+            <option value="2" {% if movie.rating == 2 %}selected="selected"{% endif %}>2</option>
+            <option value="3" {% if movie.rating == 3 %}selected="selected"{% endif %}>3</option>
+            <option value="4" {% if movie.rating == 4 %}selected="selected"{% endif %}>4</option>
+            <option value="5" {% if movie.rating == 5 %}selected="selected"{% endif %}>5</option>
           </select> 
       </td>
       {% endif %}
@@ -47,7 +45,7 @@
   </tbody>
 </table>
 {% else %}
-    <li><em>No records found - search for artist or album to continue.</em>
+    <li><em>No records found - search for movie to continue.</em>
 {% endif %}
 
 <hr>
@@ -62,7 +60,7 @@
 
 // FIXME: the approach for flashing the Saving and Saved messages is clunky
 $(".rating-selector").on('change', function () {
-    var album_id = this.id;
+    var movie_id = this.id;
     var user_id  = this.dataset.userid;
     var rating   = this.value;
 
@@ -74,7 +72,7 @@ $(".rating-selector").on('change', function () {
         url: "{{ url_for('main.set_rating') }}",
         type: "POST",
         data: JSON.stringify({
-            "album_id": album_id, 
+            "movie_id": movie_id, 
             "user_id":  user_id,
             "rating":   rating
         }),

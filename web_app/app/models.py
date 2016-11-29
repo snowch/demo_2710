@@ -9,44 +9,42 @@ import os, json
 import requests
 import time
 from . import app, login_manager
+from app.cloudant_db import cloudant_client
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
-MUSICDB_URL  = app.config['CL_URL'] + '/' + app.config['CL_MUSICDB']
 RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
 
+CL_URL      = app.config['CL_URL']
+CL_MOVIEDB  = app.config['CL_MOVIEDB']
+CL_AUTHDB   = app.config['CL_AUTHDB']
+CL_RATINGDB = app.config['CL_RATINGDB']
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, Album):
+        if isinstance(obj, Movie):
             return obj.as_dict()
         else:
             JSONEncoder.default(self, obj)
 
 app.json_encoder = CustomJSONEncoder
 
-class Album:
+class Movie:
 
-    def __init__(self, album_id, artist, title):
-        self.album_id = album_id
-        self.artist = artist
-        self.title = title
-        self.rating = None
-        self.rating_timestamp = None
+    def __init__(self, movie_id, name):
+        self.movie_id = movie_id
+        self.name = name 
 
     def as_dict(self):
         return dict(
-                    album_id=self.album_id,
-                    artist=self.artist,
-                    title=self.title,
-                    rating=self.rating,
-                    rating_timestamp=self.rating_timestamp
+                    movie_id = self.movie_id,
+                    name = self.name,
                 )
 
     @staticmethod
-    def save_rating(album_id, user_id, rating):
+    def save_rating(movie_id, user_id, rating):
         data = {
-            "album_id": album_id,
+            "movie_id": movie_id,
             "user_id": user_id,
             "rating": rating,
             "timestamp": current_milli_time()
@@ -62,75 +60,27 @@ class Album:
         response.raise_for_status()
 
     @staticmethod
-    def find_albums(name):
+    def find_movies(search_string):
 
-        qry = { 
-            "selector": {
-              "$text": name
-            }
+        movie_db = cloudant_client[CL_MOVIEDB]
+        index_name = 'movie-search-index'
+
+        end_point = '{0}/{1}/_design/{2}/_search/{2}'.format ( CL_URL, CL_MOVIEDB, index_name )
+        data = {
+            "q": "name:" + search_string,
+            "limit": 25
         }
-        response = requests.post(MUSICDB_URL + '/_find', 
-                    auth=app.config['CL_AUTH'], 
-                    data=json.dumps(qry), 
-                    headers={'Content-Type':'application/json'})
-        
-        album_docs = json.loads(response.text)['docs']
-        album_ids = [ doc['_id'] for doc in album_docs ]
+        headers = { "Content-Type": "application/json" }
+        response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
+        movie_rows = json.loads(response.text)['rows']
+        movies = []
 
-        albums = {}
-        for doc in album_docs:
-            album = Album(doc['_id'], doc['artist'], doc['title'])
-            albums[album.album_id] = album
-            # print(doc['_id'], doc['artist'], doc['title'])
+        if movie_rows:
+            for row in movie_rows:
+                movie = Movie(row['id'], row['fields']['name'])
+                movies.append(movie)
 
-        if current_user:
-            # FIXME: cloudant query appears to be broken so we filter data
-            # in our application code. cloudant M/R index will probably be
-            # better here
-            current_user_id = current_user.get_id()
-            qry = { 
-                  "selector": {
-                       "user_id": { "$eq": current_user_id },
-                       "album_id": { "$in": album_ids },
-                       "timestamp": { "$gt": None }
-                  },
-                  "fields": [ "user_id", "album_id", "timestamp", "rating" ],
-                  #"sort": [ 
-                  #    { "user_id": "desc" },
-                  #    { "album_id": "desc" },
-                  #    { "timestamp": "desc" }
-                  #],
-                  #"limit": 1
-            }
-            # print(json.dumps(qry))
-
-            response = requests.post(RATINGDB_URL + '/_find', 
-                        auth=app.config['CL_AUTH'], 
-                        data=json.dumps(qry), 
-                        headers={'Content-Type':'application/json'})
-
-            # print(response.text)
-            # FIXME see output from print statement
-            # "warning":"no matching index found, create an index to optimize query time"
-
-            # add rating to album if exists filtering out older timestamps
-            # as required due to cloudant query issue
-            data = response.json()
-
-            if 'docs' in data:
-                for doc in data['docs']:
-                    album_id = doc['album_id']
-                    rating   = doc['rating']
-                    timestamp = doc['timestamp']
-                    
-                    album = albums[album_id]
-                    if album.rating_timestamp is None or \
-                       album.rating_timestamp < timestamp:
-
-                        album.rating = rating
-                        album.rating_timestamp = timestamp
-
-        return [ v for k,v in albums.items()]
+        return movies 
 
 
 class User(UserMixin):

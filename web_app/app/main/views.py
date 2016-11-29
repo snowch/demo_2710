@@ -3,20 +3,20 @@ from flask.ext.login import login_required
 from . import forms
 from . import main 
 from .. import app
-from ..models import Album
+from ..models import Movie
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
 
     search_string = session.get('search_string') 
     if search_string:
-        session['albums'] = Album.find_albums(session.get('search_string'))
+        session['movies'] = Movie.find_movies(session.get('search_string'))
     else:
-        session['albums'] = []
+        session['movies'] = []
 
     return render_template('/main/index.html', 
             name = search_string,
-            albums = session.get('albums'))
+            movies = session.get('movies'))
 
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
@@ -31,19 +31,20 @@ def set_search_string():
 @main.route('/set_rating', methods=['POST'])
 @login_required
 def set_rating():
+    pass
 
-    if not request.json or \
-       not 'album_id' in request.json or \
-       not 'user_id' in request.json or \
-       not 'rating' in request.json:
-        abort(400)
+   # if not request.json or \
+   #    not 'album_id' in request.json or \
+   #    not 'user_id' in request.json or \
+   #    not 'rating' in request.json:
+   #     abort(400)
 
-    album_id = request.json['album_id']
-    user_id  = request.json['user_id']
-    rating   = request.json['rating']
+   # album_id = request.json['album_id']
+   # user_id  = request.json['user_id']
+   # rating   = request.json['rating']
 
-    if rating == '-':
-        return('{ "success": "ignored_as_value_not_changed" }')
+   # if rating == '-':
+   #     return('{ "success": "ignored_as_value_not_changed" }')
 
-    Album.save_rating(album_id, user_id, int(rating))
-    return('{ "success": "true" }')
+   # Album.save_rating(album_id, user_id, int(rating))
+   # return('{ "success": "true" }')

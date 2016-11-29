@@ -108,6 +108,10 @@ def populate_rating_db():
                     })
                 chunk = chunk + 1
 
+                # max request size is 1MB - we need to ensure chunks are 
+                # smaller than this, 10000 docs was chosen arbitrarily and
+                # seems to be ok
+
                 if chunk % 10000 == 0:
                     resp = rating_db.bulk_docs(bulk_docs)
                     num_ok = len([ r['ok'] for r in resp if 'ok' in r ])
@@ -125,24 +129,32 @@ function(doc){
   if (doc.name){
     index("name", doc.name, {"store": true});
   }
-  if (doc.categories){
-    index("categories", doc.categories, {"store": true});
-  }
 }
 '''    
-    musicdb = cloudant_client[CL_MOVIEDB]
-    ddoc = DesignDocument(musicdb, 'artist-title-index')
+    moviedb = cloudant_client[CL_MOVIEDB]
+    index_name = 'movie-search-index'
 
-    try:
+    ddoc = DesignDocument(moviedb, index_name)
+    if ddoc.exists():
         ddoc.fetch()
-        ddoc.update_search_index('artist-title-index', ddoc_fn, analyzer=None)
-    except HTTPError:
-        print('httperror fetching {0} design doc'.format('artist-title-index'))
-        ddoc.add_search_index('artist-title-index', ddoc_fn, analyzer=None)
-
+        ddoc.update_search_index(index_name, ddoc_fn, analyzer=None)
+        print('updated', index_name)
+    else:
+        ddoc.add_search_index(index_name, ddoc_fn, analyzer=None)
+        print('created', index_name)
     ddoc.save()
 
-    
-#create_dbs()
-#create_musicdb_indexes()
-#create_ratingdb_indexes()
+    # Test the index
+
+    import time
+    time.sleep(1) # give some time for indexing to finish
+
+    end_point = '{0}/{1}/_design/{2}/_search/{2}'.format ( CL_URL, CL_MOVIEDB, index_name )
+    data = {
+        "q": "name:Toy Story",
+        "sort": "foo",
+        "limit": 3
+    }
+    headers = { "Content-Type": "application/json" }
+    response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
+    print(response.json())
