@@ -10,6 +10,7 @@ import requests
 import time
 from . import app, login_manager
 from app.cloudant_db import cloudant_client
+from app.redis_db import get_next_user_id
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -92,7 +93,6 @@ class User(UserMixin):
     confirmed = False
 
     def __init__(self, email, password=None, password_hash=None):
-        self.id = email
         self.email = email
         if password_hash:
             self.password_hash = password_hash
@@ -193,18 +193,19 @@ class User(UserMixin):
 
     def save(self):
 
-        doc = { 
-            "_id": self.email,
+        self.id = get_next_user_id()
+
+        data = { 
+            "_id": str(self.id),
+            "email": self.email,
             "password_hash": self.password_hash
         }
 
-        # TODO update if exists
-        response = requests.post(app.config['CL_URL'] + '/authdb/', 
-            auth=app.config['CL_AUTH'], 
-            data=json.dumps(doc),
-            headers={'Content-Type':'application/json'})
+        auth_db = cloudant_client[CL_AUTHDB]
+        doc = auth_db.create_document(data)
 
-        response.raise_for_status()
+        if not doc.exists():
+            raise BaseException("Coud not save: " + data)
 
     @staticmethod
     def find_by_email(email):

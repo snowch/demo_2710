@@ -27,10 +27,10 @@ class Config:
     CL_AUTHDB   = 'authdb'
     CL_RATINGDB = 'ratingdb'
 
-    # Compose details
+    # Redis details
 
-    compose_credentials = vcap['compose-for-redis'][0]['credentials']
-    COMPOSE_URI  = compose_credentials['uri']
+    redis_credentials = vcap['compose-for-redis'][0]['credentials']
+    REDIS_URI = redis_credentials['uri']
 
     @staticmethod
     def init_app(app):
