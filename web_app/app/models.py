@@ -36,11 +36,13 @@ class Movie:
     def __init__(self, movie_id, name):
         self.movie_id = movie_id
         self.name = name 
+        self.rating = None
 
     def as_dict(self):
         return dict(
                     movie_id = self.movie_id,
                     name = self.name,
+                    rating = self.rating
                 )
 
     @staticmethod
@@ -74,20 +76,26 @@ class Movie:
         headers = { "Content-Type": "application/json" }
         response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
         movie_data = json.loads(response.text)
-
-        print(movie_data)
-        
         if 'rows' in movie_data:
             movies = {}
             rating_ids = []
 
             for row in movie_data['rows']:
-                movies[row['id']] = Movie(row['id'], row['fields']['name'])
-                if current_user.get_id():
-                    rating_ids.append("movie_{0}/user_{1}".format(row['id'], current_user.get_id()))
+                movie_user_key = "movie_{0}/user_{1}".format(row['id'], current_user.get_id())
 
-        print(movies.items())
-        print(rating_ids)
+                movies[movie_user_key] = Movie(row['id'], row['fields']['name'])
+                if current_user.get_id():
+                    rating_ids.append(movie_user_key)
+
+        keys = urllib.parse.quote_plus(json.dumps(rating_ids))
+        end_point = '{0}/{1}/_all_docs?keys={2}&include_docs=true'.format ( CL_URL, CL_RATINGDB, keys)
+        response = cloudant_client.r_session.get(end_point)
+        rating_data = json.loads(response.text)
+
+        if 'rows' in rating_data:
+            for row in rating_data['rows']:
+                if 'doc' in row:
+                    movies[row['key']].rating = row['doc']['rating']
 
         return [ v for k,v in movies.items()]
 
