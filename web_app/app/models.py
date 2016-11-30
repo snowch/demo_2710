@@ -8,6 +8,7 @@ from flask.ext.login import UserMixin, AnonymousUserMixin, current_user
 import os, json
 import requests
 import time
+import urllib
 from . import app, login_manager
 from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
@@ -92,7 +93,8 @@ class User(UserMixin):
     password_hash = ''
     confirmed = False
 
-    def __init__(self, email, password=None, password_hash=None):
+    def __init__(self, id, email, password=None, password_hash=None):
+        self.id = id 
         self.email = email
         if password_hash:
             self.password_hash = password_hash
@@ -193,33 +195,44 @@ class User(UserMixin):
 
     def save(self):
 
-        self.id = get_next_user_id()
+        if self.id == None:
+            self.id = get_next_user_id()
+            data = { 
+                "_id": str(self.id),
+                "email": self.email,
+                "password_hash": self.password_hash
+            }
+            auth_db = cloudant_client[CL_AUTHDB]
+            doc = auth_db.create_document(data)
 
-        data = { 
-            "_id": str(self.id),
-            "email": self.email,
-            "password_hash": self.password_hash
-        }
-
-        auth_db = cloudant_client[CL_AUTHDB]
-        doc = auth_db.create_document(data)
-
-        if not doc.exists():
-            raise BaseException("Coud not save: " + data)
+            if not doc.exists():
+                raise BaseException("Coud not save: " + data)
+        else:
+            raise BaseException("Updating user account is not supported")
 
     @staticmethod
     def find_by_email(email):
 
-        response = requests.get(app.config['CL_URL'] + '/authdb/' + email, 
-            auth=app.config['CL_AUTH'], 
-            headers={'Content-Type':'application/json'})
+        # TODO make this cloudant lookup code into a utility method
+        
+        auth_db = cloudant_client[CL_AUTHDB]
+        key = urllib.parse.quote_plus(email)
+        view_name = 'authdb-email-index'
+        end_point = '{0}/{1}/_design/{2}/_view/{2}?key="{3}"&include_docs=true'.format ( CL_URL, CL_AUTHDB, view_name, key )
+        response = cloudant_client.r_session.get(end_point)
 
         if response.status_code == 200:
-            password_hash = response.json()['password_hash']
-            user = User(email, password_hash=password_hash)
-            return user
-        else:
-            return None
+            print(response.json())
+            rows = response.json()['rows']
+            if len(rows) > 0:
+                password_hash = rows[0]['doc']['password_hash']
+                id = rows[0]['doc']['_id']
+                user = User(id, email, password_hash=password_hash)
+                return user
+            else:
+                print("user not found for email", email)
+                return None
+        return None
 
 class AnonymousUser(AnonymousUserMixin):
     def can(self, permissions):
@@ -233,6 +246,20 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.find_by_email(user_id)
+    print('load_user', user_id)
+
+    auth_db = cloudant_client[CL_AUTHDB]
+    end_point = '{0}/{1}/{2}'.format ( CL_URL, CL_AUTHDB, user_id )
+    response = cloudant_client.r_session.get(end_point)
+
+    if response.status_code == 200:
+        print(response.json())
+        doc = response.json()
+        email = doc['email']
+        password_hash = doc['password_hash']
+        user = User(user_id, email, password_hash=password_hash)
+        return user
+    return None
+
 
 

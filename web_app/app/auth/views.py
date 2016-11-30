@@ -44,7 +44,13 @@ def register():
     form = RegistrationForm()
 
     if form.validate_on_submit():
-        user = models.User(form.email.data, form.password.data)
+        # TODO push this check to the model?
+        user = models.User.find_by_email(form.email.data)
+        if user is not None:
+            flash('Could not create account.')
+            return redirect(url_for('auth.login'))
+
+        user = models.User(None, form.email.data, form.password.data)
         user.save()
 
         #token = user.generate_confirmation_token()
