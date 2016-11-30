@@ -110,8 +110,7 @@ def populate_rating_db():
                     max_user_id = user_id
                 
                 bulk_docs.append({
-                    'user_id': user_id,
-                    'movie_id': movie_id,
+                    '_id': "user_{0}/movie_{1}".format(user_id, movie_id),
                     'rating': rating,
                     'timestamp': timestamp
                     })

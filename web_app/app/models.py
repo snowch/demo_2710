@@ -73,17 +73,23 @@ class Movie:
         }
         headers = { "Content-Type": "application/json" }
         response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
-        movie_rows = json.loads(response.text)['rows']
-        movies = []
-        movie_ids = []
+        movie_data = json.loads(response.text)
 
-        if movie_rows:
-            for row in movie_rows:
-                movie = Movie(row['id'], row['fields']['name'])
-                movies.append(movie)
-                movie_ids.append(row['id'])
+        print(movie_data)
+        
+        if 'rows' in movie_data:
+            movies = {}
+            rating_ids = []
 
-        return movies 
+            for row in movie_data['rows']:
+                movies[row['id']] = Movie(row['id'], row['fields']['name'])
+                if current_user.get_id():
+                    rating_ids.append("movie_{0}/user_{1}".format(row['id'], current_user.get_id()))
+
+        print(movies.items())
+        print(rating_ids)
+
+        return [ v for k,v in movies.items()]
 
 
 class User(UserMixin):
