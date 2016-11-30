@@ -47,6 +47,7 @@ class Movie:
 
     @staticmethod
     def save_rating(movie_id, user_id, rating):
+        # FIXME: updating a rating currently fails due to MVCC conflict
         data = {
             "_id": "movie_{0}/user_{1}".format(movie_id, user_id),
             "rating": rating,
