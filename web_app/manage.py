@@ -10,14 +10,20 @@ manager = Manager(app)
 manager.add_command("runserver", server)
 
 @manager.command
-def db_clean_setup():
-    "Delete and re-create existing Cloudant databases"
-    delete_dbs()
+def db_all():
+    "Delete and recreate Cloudant databases"
+    db_delete()
     db_setup()
+    db_populate()
+
+@manager.command
+def db_delete():
+    "Delete Cloudant databases"
+    delete_dbs()
 
 @manager.command
 def db_setup():
-    "Create cloudant databases"
+    "Create Cloudant databases"
     create_dbs()
     create_moviedb_indexes()
     #create_ratingdb_indexes()
@@ -25,7 +31,7 @@ def db_setup():
 
 @manager.command
 def db_populate():
-    "Populate cloudant databases"
+    "Populate Cloudant databases"
     populate_movie_db()
     populate_rating_db()
 

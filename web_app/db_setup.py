@@ -3,6 +3,8 @@ import os.path
 
 from app import app
 from app.cloudant_db import cloudant_client
+from app.redis_db import set_next_user_id
+
 from cloudant.design_document import DesignDocument
 from requests.exceptions import HTTPError
 
@@ -92,6 +94,7 @@ def populate_rating_db():
     
     rating_db = cloudant_client[CL_RATINGDB]
 
+    max_user_id = 0
     chunk = 0
     bulk_docs = []
     with open(rating_file, 'r', encoding='ISO-8859-1') as f:
@@ -99,12 +102,18 @@ def populate_rating_db():
             line = f.readline().strip()
 
             if not line == '':
-                (userid, movieid, rating, timestamp) = line.split('::')
+                (user_id, movie_id, rating, timestamp) = line.split('::')
+
+                user_id = int(user_id)
+
+                if user_id > max_user_id:
+                    max_user_id = user_id
                 
                 bulk_docs.append({
-                    'userid': userid,
-                    'movieid': movieid,
-                    'rating': rating
+                    'user_id': user_id,
+                    'movie_id': movie_id,
+                    'rating': rating,
+                    'timestamp': timestamp
                     })
                 chunk = chunk + 1
 
@@ -117,8 +126,13 @@ def populate_rating_db():
                     num_ok = len([ r['ok'] for r in resp if 'ok' in r ])
                     print('chunk: ', chunk, ' num saved: ', num_ok)
                     bulk_docs = []
+
+                    # only load 10000 ratings for now
+                    break
             else:
                 break
+
+    set_next_user_id(max_user_id + 1)
 
 
 def create_moviedb_indexes():
