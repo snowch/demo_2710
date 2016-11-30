@@ -174,12 +174,7 @@ class User(UserMixin):
 
     @staticmethod
     def email_is_registered(email):
-
-        response = requests.get(app.config['CL_URL'] + '/authdb/' + email, 
-            auth=app.config['CL_AUTH'], 
-            headers={'Content-Type':'application/json'})
-
-        return response.status_code == 200
+        return User.find_by_email(email) is not None
 
     @staticmethod
     def verify_auth_token(token):
@@ -194,6 +189,8 @@ class User(UserMixin):
         return '<User %r>' % self.email
 
     def save(self):
+
+        # TODO put this cloudant lookup code into a utility method
 
         if self.id == None:
             self.id = get_next_user_id()
@@ -213,8 +210,8 @@ class User(UserMixin):
     @staticmethod
     def find_by_email(email):
 
-        # TODO make this cloudant lookup code into a utility method
-        
+        # TODO put this cloudant lookup code into a utility method
+
         auth_db = cloudant_client[CL_AUTHDB]
         key = urllib.parse.quote_plus(email)
         view_name = 'authdb-email-index'
@@ -222,7 +219,6 @@ class User(UserMixin):
         response = cloudant_client.r_session.get(end_point)
 
         if response.status_code == 200:
-            print(response.json())
             rows = response.json()['rows']
             if len(rows) > 0:
                 password_hash = rows[0]['doc']['password_hash']
@@ -246,14 +242,14 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    print('load_user', user_id)
+
+    # TODO put this cloudant lookup code into a utility method
 
     auth_db = cloudant_client[CL_AUTHDB]
     end_point = '{0}/{1}/{2}'.format ( CL_URL, CL_AUTHDB, user_id )
     response = cloudant_client.r_session.get(end_point)
 
     if response.status_code == 200:
-        print(response.json())
         doc = response.json()
         email = doc['email']
         password_hash = doc['password_hash']
