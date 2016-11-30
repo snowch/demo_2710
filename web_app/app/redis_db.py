@@ -10,7 +10,7 @@ def get_next_user_id():
 
 @atexit.register
 def python_shutting_down():
-    print('Disconnecting redist client')
+    print('Disconnecting redis client')
     # TODO
 
 

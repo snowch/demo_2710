@@ -189,3 +189,36 @@ function(doc){
     headers = { "Content-Type": "application/json" }
     response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
     print(response.json())
+
+
+def create_authdb_indexes():
+
+    db = cloudant_client[CL_AUTHDB]
+
+    ddoc_fn = '''
+function(doc){
+  if (doc.email) {
+    emit(doc.email);
+  }
+}
+'''    
+    view_name = 'authdb-email-index'
+
+    ddoc = DesignDocument(db, view_name)
+    if ddoc.exists():
+        ddoc.fetch()
+        ddoc.update_view(view_name, ddoc_fn)
+        print('updated', view_name)
+    else:
+        ddoc.add_view(view_name, ddoc_fn)
+        print('created', view_name)
+    ddoc.save()
+
+    # Test the index
+
+    import urllib
+    key = urllib.parse.quote_plus('a@a.com')
+
+    end_point = '{0}/{1}/_design/{2}/_view/{2}?key="{3}"'.format ( CL_URL, CL_AUTHDB, view_name, key )
+    response = cloudant_client.r_session.get(end_point)
+    print(response.json())
