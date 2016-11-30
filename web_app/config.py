@@ -11,22 +11,26 @@ class Config:
                 'VCAP_SERVICES must exist and contain the contents of the bluemix vcap.json data.'
                 )
 
-    try:
-        vcap = json.loads(vcap_services)['cloudantNoSQLDB']
-    except:
-        raise BaseException(
-            'A cloudantNoSQLDB element was not found in the vcap.json.\n' +
-            'If you are running on Bluemix, do you have a Cloudant database service bound to this application?'
-            )
+    vcap = json.loads(vcap_services)
 
-    CL_USER = vcap[0]['credentials']['username']
-    CL_PASS = vcap[0]['credentials']['password']
-    CL_URL  = vcap[0]['credentials']['url']
+    # Cloudant details
+
+    cloudant_credentials = vcap['cloudantNoSQLDB'][0]['credentials']
+
+    CL_USER = cloudant_credentials['username']
+    CL_PASS = cloudant_credentials['password']
+    CL_URL  = cloudant_credentials['url']
+
     CL_AUTH = ( CL_USER, CL_PASS )
 
     CL_MOVIEDB  = 'moviedb'
     CL_AUTHDB   = 'authdb'
     CL_RATINGDB = 'ratingdb'
+
+    # Compose details
+
+    compose_credentials = vcap['compose-for-redis'][0]['credentials']
+    COMPOSE_URI  = compose_credentials['uri']
 
     @staticmethod
     def init_app(app):

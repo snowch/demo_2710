@@ -26,7 +26,7 @@
   <tbody>
   {% for movie in movies %}
   <tr>
-      <td>{{ movie['name'] }}</td>
+      <td>{{ movie.name }}</td>
       {% if current_user.is_authenticated %}
       <td>
           <!-- TODO: crsf protection -->
@@ -47,8 +47,6 @@
 {% else %}
     <li><em>No records found - search for movie to continue.</em>
 {% endif %}
-
-<hr>
 
 {% endblock %}
 

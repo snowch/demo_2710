@@ -6,3 +6,5 @@ __pycache__/
 *.swp
 ml-1m.zip
 ml-1m/
+redis_vcap.json
+cloudant_vcap.json

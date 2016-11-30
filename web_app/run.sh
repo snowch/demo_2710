@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export VCAP_SERVICES=$(cat vcap.json)
+export FLASK_DEBUG=1
+export VCAP_SERVICES="{$(cat cloudant_vcap.json),$(cat redis_vcap.json)}"
 
 if [ $# -eq 0 ]
 then

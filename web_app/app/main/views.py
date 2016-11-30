@@ -31,20 +31,19 @@ def set_search_string():
 @main.route('/set_rating', methods=['POST'])
 @login_required
 def set_rating():
-    pass
 
-   # if not request.json or \
-   #    not 'album_id' in request.json or \
-   #    not 'user_id' in request.json or \
-   #    not 'rating' in request.json:
-   #     abort(400)
+    if not request.json or \
+       not 'movie_id' in request.json or \
+       not 'user_id' in request.json or \
+       not 'rating' in request.json:
+        abort(400)
 
-   # album_id = request.json['album_id']
-   # user_id  = request.json['user_id']
-   # rating   = request.json['rating']
+    movie_id = request.json['movie_id']
+    user_id  = request.json['user_id']
+    rating   = request.json['rating']
 
-   # if rating == '-':
-   #     return('{ "success": "ignored_as_value_not_changed" }')
+    if rating == '-':
+        return('{ "success": "ignored_as_value_not_changed" }')
 
-   # Album.save_rating(album_id, user_id, int(rating))
-   # return('{ "success": "true" }')
+    Movie.save_rating(movie_id, user_id, int(rating))
+    return('{ "success": "true" }')

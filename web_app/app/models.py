@@ -44,8 +44,7 @@ class Movie:
     @staticmethod
     def save_rating(movie_id, user_id, rating):
         data = {
-            "movie_id": movie_id,
-            "user_id": user_id,
+            "_id": "movie_{0}/user_{1}".format(movie_id, user_id),
             "rating": rating,
             "timestamp": current_milli_time()
         }
@@ -74,11 +73,13 @@ class Movie:
         response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
         movie_rows = json.loads(response.text)['rows']
         movies = []
+        movie_ids = []
 
         if movie_rows:
             for row in movie_rows:
                 movie = Movie(row['id'], row['fields']['name'])
                 movies.append(movie)
+                movie_ids.append(row['id'])
 
         return movies 
 
