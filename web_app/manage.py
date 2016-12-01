@@ -1,7 +1,7 @@
 from flask.ext.script import Manager, Server
 from app import app
 import config
-from db_setup import delete_dbs, create_dbs, populate_movie_db, populate_rating_db, create_moviedb_indexes, create_ratingdb_indexes, create_authdb_indexes
+from db_setup import delete_dbs, create_dbs, populate_movie_db, populate_rating_db, create_moviedb_indexes, create_authdb_indexes, create_test_user
 
 port = app.config['PORT']
 server = Server(host="0.0.0.0", port=port)
@@ -15,6 +15,7 @@ def db_all():
     db_delete()
     db_setup()
     db_populate()
+    create_test_user()
 
 @manager.command
 def db_delete():
@@ -26,7 +27,6 @@ def db_setup():
     "Create Cloudant databases"
     create_dbs()
     create_moviedb_indexes()
-    #create_ratingdb_indexes()
     create_authdb_indexes()
 
 @manager.command

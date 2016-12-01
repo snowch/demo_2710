@@ -4,6 +4,7 @@ import os.path
 from app import app
 from app.cloudant_db import cloudant_client
 from app.redis_db import set_next_user_id
+from app import models
 
 from cloudant.design_document import DesignDocument
 from requests.exceptions import HTTPError
@@ -126,7 +127,8 @@ def populate_rating_db():
                     print('chunk: ', chunk, ' num saved: ', num_ok)
                     bulk_docs = []
 
-                    # only load 10000 ratings for now
+                # only load 10000 ratings for now
+                if chunk % 50000 == 0:
                     break
             else:
                 break
@@ -159,50 +161,15 @@ function(doc){
 
     # Test the index
 
-    end_point = '{0}/{1}/_design/{2}/_search/{2}'.format ( CL_URL, CL_MOVIEDB, index_name )
-    data = {
-        "q": "name:Toy Story",
-        "sort": "foo",
-        "limit": 3
-    }
-    headers = { "Content-Type": "application/json" }
-    response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
-    print(response.json())
-
-def create_ratingdb_indexes():
-
-    db = cloudant_client[CL_RATINGDB]
-
-    ddoc_fn = '''
-function(doc){
-  if (doc.movie_id) {
-    emit(doc.movie_id, doc.user_id);
-  }
-}
-'''    
-    view_name = 'rating-search-index'
-
-    ddoc = DesignDocument(db, view_name)
-    if ddoc.exists():
-        ddoc.fetch()
-        ddoc.update_view(view_name, ddoc_fn)
-        print('updated', view_name)
-    else:
-        ddoc.add_view(view_name, ddoc_fn)
-        print('created', view_name)
-    ddoc.save()
-
-    # Test the index
-
-    end_point = '{0}/{1}/_design/{2}/_view/{2}'.format ( CL_URL, CL_RATINGDB, view_name )
-    data = {
-        "keys": "a@a.com",
-    }
-    # ?q=*:*&limit=1&group_field=division&include_docs=true&sort_field=-timestamp
-    headers = { "Content-Type": "application/json" }
-    response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
-    print(response.json())
-
+    # end_point = '{0}/{1}/_design/{2}/_search/{2}'.format ( CL_URL, CL_MOVIEDB, index_name )
+    # data = {
+    #     "q": "name:Toy Story",
+    #     "sort": "foo",
+    #     "limit": 3
+    # }
+    # headers = { "Content-Type": "application/json" }
+    # response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
+    # print(response.json())
 
 def create_authdb_indexes():
 
@@ -229,9 +196,14 @@ function(doc){
 
     # Test the index
 
-    import urllib
-    key = urllib.parse.quote_plus('a@a.com')
+    # import urllib
+    # key = urllib.parse.quote_plus('a@a.com')
 
-    end_point = '{0}/{1}/_design/{2}/_view/{2}?key="{3}"'.format ( CL_URL, CL_AUTHDB, view_name, key )
-    response = cloudant_client.r_session.get(end_point)
-    print(response.json())
+    # end_point = '{0}/{1}/_design/{2}/_view/{2}?key="{3}"'.format ( CL_URL, CL_AUTHDB, view_name, key )
+    # response = cloudant_client.r_session.get(end_point)
+    # print(response.json())
+
+
+def create_test_user():
+    user = models.User(None, 'a@a.com', 'a')
+    user.save()
