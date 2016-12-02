@@ -27,26 +27,6 @@ import org.apache.spark.mllib.recommendation.MatrixFactorizationModel
 import org.apache.spark.mllib.recommendation.Rating
 
 
-class ModelCache (sc: SparkContext) {
-  
-  private var model:MatrixFactorizationModel = CloudantALSModelBuilder.buildModel(sc)
-
-  def getModel() : MatrixFactorizationModel = {
-    return model
-  }
-  
-  def rebuildModel() = {
-    this.synchronized {
-      model = CloudantALSModelBuilder.buildModel(sc)
-    }
-  }
-}
-
-
-class Model (sc: SparkContext) { 
-  
-  
-}
 
 object MovieRating {
   def main(args: Array[String]) {
@@ -82,31 +62,18 @@ object MovieRating {
                          List(kafkaProps.getConfig("kafka.topic"))
                          )
                          
-    val modelCache = new ModelCache(sc)
-    
-    // let's wrap the predict function with a try catch block
-    def predict(userId: Int, movieId: Int): Try[Any] = {
-        Try(modelCache.getModel().predict(userId, movieId))
-    }
-    
-    val moviesToRate = stream.
+    val recommender = new MovieRecommender(sc)
+                             
+    val userLogoutEvents = stream.
                         filter(_._2.contains(",")).
                         map(_._2.split(","))
     
-    moviesToRate.foreachRDD( rdd => {
+    userLogoutEvents.foreachRDD( rdd => {
         for(item <- rdd.collect().toArray) {
           
-            if (item(0) == "REBUILD_MODEL") {
-              modelCache.rebuildModel()
-            } else {
-              val userId = item(0).toInt
-              val movieId = item(1).toInt     
-              val prediction = predict(userId, movieId).getOrElse(-1)
-              
-              println(s"BigInsights_Streaming_Predictor, $userId, $movieId, $prediction")
-              
-              val producerRecord = new ProducerRecord[String, String](messagehub_response_topic_name, s"BigInsights_Streaming_Predictor, $userId, $movieId, $prediction")
-              kafkaProducer.send( producerRecord );
+            if (item(0) == "LOGOUT_EVENT") {
+                val userId = item(1).toInt
+                recommender.buildModelAndRecommendMovies(userId)
             }
         }
     })

@@ -7,9 +7,15 @@ import org.apache.spark.mllib.recommendation.MatrixFactorizationModel
 import org.apache.spark.mllib.recommendation.ALS
 import org.apache.spark.mllib.recommendation.Rating
 
-object CloudantALSModelBuilder {
+
+class MovieRecommender (sc:SparkContext) {
   
-  def buildModel(sc : SparkContext) : MatrixFactorizationModel = {
+  def buildModelAndRecommendMovies (userId:Int) = {
+    val model = buildModel()
+    recommendMovies(model, userId)
+  }
+  
+  def buildModel() : MatrixFactorizationModel = {
     
     val sqlContext = new SQLContext(sc)
     import sqlContext._
@@ -37,4 +43,18 @@ object CloudantALSModelBuilder {
     return model
   }
  
+  def recommendMovies (model:MatrixFactorizationModel, userId:Int) = {
+    val ratings:Array[Rating] = model.recommendProducts(userId, 25)
+    val rdd = sc.parallelize(ratings)
+    
+    val sqlContext = new SQLContext(sc)
+    import sqlContext.implicits._
+    
+    rdd.toDF.write.format("com.cloudant.spark").
+      option("cloudant.host",sc.getConf.get("spark.cloudant_host")).
+      option("cloudant.username", sc.getConf.get("spark.cloudant_user")).
+      option("cloudant.password", sc.getConf.get("spark.cloudant_password")).
+      save("recommendationdb")
+  }
+  
 }
