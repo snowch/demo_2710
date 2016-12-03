@@ -26,6 +26,8 @@ class Config:
     CL_MOVIEDB  = 'moviedb'
     CL_AUTHDB   = 'authdb'
     CL_RATINGDB = 'ratingdb'
+    CL_RECOMMENDDB = 'recommendationdb'
+    CL_EVENTDB = 'eventdb'
 
     # Redis details
 

@@ -21,6 +21,8 @@ CL_URL      = app.config['CL_URL']
 CL_MOVIEDB  = app.config['CL_MOVIEDB']
 CL_AUTHDB   = app.config['CL_AUTHDB']
 CL_RATINGDB = app.config['CL_RATINGDB']
+CL_RECOMMENDDB = app.config['CL_RECOMMENDDB']
+CL_EVENTDB = app.config['CL_EVENTDB']
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -30,6 +32,24 @@ class CustomJSONEncoder(JSONEncoder):
             JSONEncoder.default(self, obj)
 
 app.json_encoder = CustomJSONEncoder
+
+class Event:
+
+    LOGIN_EVENT = "LOGIN_EVENT"
+
+    @staticmethod
+    def login_event(user_id):
+        db = cloudant_client[CL_EVENTDB]
+        data = {
+            "type": Event.LOGIN_EVENT,
+            "user_id": user_id,
+            "timestamp": current_milli_time()
+        }
+        doc = db.create_document(data)
+
+        if not doc.exists():
+            print("Coud not save: " + data)
+
 
 class Movie:
 
@@ -49,7 +69,7 @@ class Movie:
     def save_rating(movie_id, user_id, rating):
         # FIXME: updating a rating currently fails due to MVCC conflict
         data = {
-            "_id": "movie_{0}/user_{1}".format(movie_id, user_id),
+            "_id": "user_{0}/rating_{1}".format(movie_id, user_id),
             "rating": rating,
             "timestamp": current_milli_time()
         }
