@@ -55,23 +55,25 @@ object MovieRating {
     // create a producer for sending responses
     val kafkaProducer = new KafkaProducer[String, String]( properties )
     
-    val ssc = new StreamingContext( sc, Seconds(1) )
+    val ssc = new StreamingContext(sc, Seconds(10))
     
-    val stream = ssc.createKafkaStream[String, String, StringDeserializer, StringDeserializer](
-                         kafkaProps,
-                         List(kafkaProps.getConfig("kafka.topic"))
-                         )
-                         
+    val changes = ssc.receiverStream(new CloudantReceiver(Map(
+      "cloudant.host" -> sc.getConf.get("spark.cloudant_host"),
+      "cloudant.username" -> sc.getConf.get("spark.cloudant_user"),
+      "cloudant.password" -> sc.getConf.get("spark.cloudant_password"),
+      "database" -> "eventdb")))
+
+      
     val recommender = new MovieRecommender(sc)
                              
-    val userLogoutEvents = stream.
+    val userLogoutEvents = changes.
                         filter(_._2.contains(",")).
                         map(_._2.split(","))
     
     userLogoutEvents.foreachRDD( rdd => {
         for(item <- rdd.collect().toArray) {
           
-            if (item(0) == "LOGOUT_EVENT") {
+            if (item(0) == "LOGIN_EVENT") {
                 val userId = item(1).toInt
                 recommender.buildModelAndRecommendMovies(userId)
             }
