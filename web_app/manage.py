@@ -2,6 +2,7 @@ from flask.ext.script import Manager, Server
 from app import app
 import config
 from db_setup import delete_dbs, create_dbs, populate_movie_db, populate_rating_db, create_moviedb_indexes, create_authdb_indexes, create_test_user
+from biginsight_setup import setup_spark
 
 port = app.config['PORT']
 server = Server(host="0.0.0.0", port=port)
@@ -34,6 +35,11 @@ def db_populate():
     "Populate Cloudant databases"
     populate_movie_db()
     populate_rating_db()
+    
+@manager.command
+def bioc_setup():
+    "Setup spark job on BIoC"
+    setup_spark()
 
 if app.debug:
     # debug routes
