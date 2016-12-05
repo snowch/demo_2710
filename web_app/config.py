@@ -33,6 +33,19 @@ class Config:
 
     redis_credentials = vcap['compose-for-redis'][0]['credentials']
     REDIS_URI = redis_credentials['uri']
+    
+    # Message Hub details
+    
+    mh_credentials = vcap['messagehub'][0]['credentials']
+    
+    MH_BROKERS_SASL = mh_credentials['kafka_brokers_sasl']
+    MH_USER         = mh_credentials['user']
+    MH_PASSWORD     = mh_credentials['password']
+    MH_API_KEY      = mh_credentials['api_key']
+    MH_ADMIN_URL    = mh_credentials['kafka_admin_url']
+    MH_REST_URL     = mh_credentials['kafka_rest_url']
+    
+    MH_TOPIC_NAME   = 'recommender_app_events'
 
     @staticmethod
     def init_app(app):

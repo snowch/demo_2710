@@ -10,3 +10,4 @@ applications:
   services:
   - my_cloudant
   - my_redis
+  - my_messagehub

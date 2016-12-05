@@ -12,6 +12,7 @@ import urllib
 from . import app, login_manager
 from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
+from app.messagehub_util import send
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -39,17 +40,7 @@ class Event:
 
     @staticmethod
     def login_event(user_id):
-        db = cloudant_client[CL_EVENTDB]
-        data = {
-            "type": Event.LOGIN_EVENT,
-            "user_id": user_id,
-            "timestamp": current_milli_time()
-        }
-        doc = db.create_document(data)
-
-        if not doc.exists():
-            print("Coud not save: " + data)
-
+        send("{0},{1}".format(Event.LOGIN_EVENT, user_id))
 
 class Movie:
 
