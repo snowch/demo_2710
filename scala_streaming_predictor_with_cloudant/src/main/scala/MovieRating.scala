@@ -21,6 +21,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import java.util.UUID
 import java.util.Properties
 import scala.util.Try
+import org.apache.log4j.LogManager
 
 import org.apache.spark.mllib.recommendation.ALS
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel
@@ -30,6 +31,10 @@ import org.apache.spark.mllib.recommendation.Rating
 
 object MovieRating {
   def main(args: Array[String]) {
+    
+    val log = LogManager.getLogger(this.getClass)
+    
+    log.info("*********** in MovieRating *********")
 
     val conf = new SparkConf().setAppName("Movie Rating Streams")
     val sc = new SparkContext(conf)
@@ -55,7 +60,7 @@ object MovieRating {
     // create a producer for sending responses
     val kafkaProducer = new KafkaProducer[String, String]( properties )
     
-    val ssc = new StreamingContext( sc, Seconds(1) )
+    val ssc = new StreamingContext( sc, Seconds(10) )
     
     val stream = ssc.createKafkaStream[String, String, StringDeserializer, StringDeserializer](
                          kafkaProps,
@@ -71,16 +76,21 @@ object MovieRating {
     userLogoutEvents.foreachRDD( rdd => {
         for(item <- rdd.collect().toArray) {
           
-            if (item(0) == "LOGOUT_EVENT") {
+            log.info(s"*********** in foreach : item ${item(0)} ${item(1)} *********")
+          
+            if (item(0) == "LOGIN_EVENT") {
                 val userId = item(1).toInt
+                
+                log.info(s"*********** LOGIN_EVENT received for $userId *********")
+                
                 recommender.buildModelAndRecommendMovies(userId)
+                
+                log.info(s"*********** finished buildModelAndRecommendMovies for $userId *********")
             }
         }
     })
-    
     ssc.start()
     ssc.awaitTermination() 
     ssc.stop(stopSparkContext=false, stopGracefully=true)
-
   }
 }
