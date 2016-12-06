@@ -34,27 +34,6 @@ object MovieRating {
     val conf = new SparkConf().setAppName("Movie Rating Streams")
     val sc = new SparkContext(conf)
     
-    val kafkaProps = new MessageHubConfig
-    
-    kafkaProps.setConfig("bootstrap.servers",   sc.getConf.get("spark.bootstrap_servers"))
-    kafkaProps.setConfig("kafka.user.name",     sc.getConf.get("spark.sasl_username"))
-    kafkaProps.setConfig("kafka.user.password", sc.getConf.get("spark.sasl_password"))
-    kafkaProps.setConfig("kafka.topic",         sc.getConf.get("spark.messagehub_topic_name"))
-    kafkaProps.setConfig("api_key",             sc.getConf.get("spark.api_key"))
-    kafkaProps.setConfig("kafka_rest_url",      sc.getConf.get("spark.kafka_rest_url"))
-    
-    // the topic for responses
-    val messagehub_response_topic_name = sc.getConf.get("spark.messagehub_topic_name") + "_responses" 
-    
-    kafkaProps.createConfiguration()
-    
-    val properties = new Properties()
-    kafkaProps.toImmutableMap.foreach {case (key, value) => properties.setProperty (key, value)}
-    properties.setProperty("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
-    
-    // create a producer for sending responses
-    val kafkaProducer = new KafkaProducer[String, String]( properties )
-    
     val ssc = new StreamingContext(sc, Seconds(10))
     
     val changes = ssc.receiverStream(new CloudantReceiver(Map(
@@ -74,10 +53,8 @@ object MovieRating {
           }
         }
     })
-    
     ssc.start()
     ssc.awaitTermination() 
     ssc.stop(stopSparkContext=false, stopGracefully=true)
-
   }
 }
