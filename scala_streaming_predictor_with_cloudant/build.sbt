@@ -14,12 +14,12 @@ libraryDependencies ++= {
      "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
      "org.apache.kafka" % "kafka-log4j-appender" % "0.9.0.0",
      "org.apache.kafka" % "kafka-clients" % "0.9.0.0",
-     "org.apache.kafka" %% "kafka" % "0.9.0.0",
-     "cloudant-labs" % "spark-cloudant" % "1.6.4-s_2.10" % "compile"
+     "org.apache.kafka" %% "kafka" % "0.9.0.0"
     )
 }
 
-spIgnoreProvided := true
+resolvers += "Spark Packages Repo" at "http://dl.bintray.com/spark-packages/maven"
+libraryDependencies += "cloudant-labs" % "spark-cloudant" % "1.6.4-s_2.10"
 
 assemblyMergeStrategy in assembly := {
   case PathList("org", "apache", "spark", xs @ _*) => MergeStrategy.first

@@ -26,7 +26,7 @@ import org.apache.spark.mllib.recommendation.ALS
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel
 import org.apache.spark.mllib.recommendation.Rating
 
-
+import com.cloudant.spark.CloudantReceiver
 
 object MovieRating {
   def main(args: Array[String]) {
@@ -63,20 +63,15 @@ object MovieRating {
       "cloudant.password" -> sc.getConf.get("spark.cloudant_password"),
       "database" -> "eventdb")))
 
-      
     val recommender = new MovieRecommender(sc)
-                             
-    val userLogoutEvents = changes.
-                        filter(_._2.contains(",")).
-                        map(_._2.split(","))
     
-    userLogoutEvents.foreachRDD( rdd => {
+    changes.foreachRDD( rdd => {
         for(item <- rdd.collect().toArray) {
           
-            if (item(0) == "LOGIN_EVENT") {
-                val userId = item(1).toInt
-                recommender.buildModelAndRecommendMovies(userId)
-            }
+          if (item.startsWith("LOGIN_EVENT,")) {
+            val _, userId = item.split(",")
+            recommender.buildModelAndRecommendMovies(userId.toString.toInt)
+          }
         }
     })
     
