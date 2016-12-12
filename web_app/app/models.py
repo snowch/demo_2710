@@ -60,7 +60,7 @@ class Movie:
     def save_rating(movie_id, user_id, rating):
         # FIXME: updating a rating currently fails due to MVCC conflict
         data = {
-            "_id": "user_{0}/rating_{1}".format(movie_id, user_id),
+            "_id": "user_{0}/rating_{1}".format(user_id, movie_id),
             "rating": rating,
             "timestamp": current_milli_time()
         }
