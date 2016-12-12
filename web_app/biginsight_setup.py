@@ -1,6 +1,8 @@
 import paramiko
 import json
-
+import re
+from app import app
+        
 class SshUtil:
         
     def __init__(self):
@@ -37,18 +39,96 @@ class SshUtil:
         self.username = username
         self.password = password
     
-    def cmd(self, command): 
+    def exec_command(self, command):
         self.client.connect(self.hostname, 22, self.username, self.password)
         # kinit will fail on Basic clusters, but that can be ignored
         self.client.exec_command('kinit -k -t {0}.keytab {0}@IBM.COM'.format(self.username))
-        (stdin, stdout, stderr) = self.client.exec_command(command)
+        return self.client.exec_command(command)    
+    
+    def cmd_print(self, command): 
+        (stdin, stdout, stderr) = self.exec_command(command)
         for line in stdout.readlines():
             print(line.rstrip())
         for line in stderr.readlines():
             print(line.rstrip())
         self.client.close()
 
+    def put(self, filenames):
+        from scp import SCPClient
+        self.client.connect(self.hostname, 22, self.username, self.password)
+        # kinit will fail on Basic clusters, but that can be ignored
+        self.client.exec_command('kinit -k -t {0}.keytab {0}@IBM.COM'.format(self.username))
+        with SCPClient(self.client.get_transport()) as scp:
+            scp.put(filenames)
+        scp.close()
+
 def setup_spark():
     
     ssh = SshUtil()
-    ssh.cmd('ls -l .')
+    (stdin, stdout, stderr) = ssh.exec_command('yarn application -list')
+    
+    for line in stdout.readlines():
+        if re.search("^application_", line.rstrip()):
+            yarn_app = line.split()
+            if yarn_app[1] == "MovieRating":
+                ssh.cmd_print("yarn application -kill {0}".format(yarn_app[0]))
+                
+    
+    jar_file = '../scala_streaming_predictor_with_cloudant/movie-rating_2.10-1.0.jar'
+    
+    import os  
+    if not os.path.isfile(jar_file):
+        raise BaseException("Couldn't find {0}. Inspect the README in the project for build instructions".format(jar_file))
+                
+    ssh.put(jar_file)
+    
+    ssh.cmd_print("""
+       echo 'spark.bootstrap_servers={0}'     > spark_streaming.conf
+       echo 'spark.sasl_username={1}'         >> spark_streaming.conf
+       echo 'spark.sasl_password={2}'         >> spark_streaming.conf
+       echo 'spark.messagehub_topic_name={3}' >> spark_streaming.conf
+       echo 'spark.api_key={4}'               >> spark_streaming.conf
+       echo 'spark.kafka_rest_url={5}'        >> spark_streaming.conf
+       echo 'spark.cloudant_host={6}'         >> spark_streaming.conf
+       echo 'spark.cloudant_user={7}'         >> spark_streaming.conf
+       echo 'spark.cloudant_password={8}'     >> spark_streaming.conf
+       
+       cat /usr/iop/current/spark-client/conf/spark-defaults.conf >> spark_streaming.conf
+    """.format(
+        ",".join(app.config['MH_BROKERS_SASL']),
+        app.config['MH_USER'],
+        app.config['MH_PASSWORD'],
+        app.config['MH_TOPIC_NAME'],
+        app.config['MH_API_KEY'],
+        app.config['MH_REST_URL'],
+        app.config['CL_HOST'],
+        app.config['CL_USER'],
+        app.config['CL_PASS']
+    ))
+    
+    # for debugging ...
+    # ssh.cmd_print("cat spark_streaming.conf")
+    
+    # ssh.cmd_print('''
+    #     spark-submit --class "MovieRating" \
+    #         --master yarn \
+    #         --deploy-mode cluster \
+    #         --properties-file spark_streaming.conf \
+    #         --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
+    #         ./movie-rating_2.10-1.0.jar > spark_streaming.log 2>&1 &
+    #     ''')
+    
+    ssh.cmd_print('''
+        spark-submit --class "MovieRating" \
+            --properties-file spark_streaming.conf \
+            --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
+            ./movie-rating_2.10-1.0.jar > spark_streaming.log 2>&1 &
+        ''')
+
+    (stdin, stdout, stderr) = ssh.exec_command('sleep 5 && yarn application -list')
+    
+    for line in stdout.readlines():
+        if re.search("^application_", line.rstrip()):
+            yarn_app = line.split()
+            if yarn_app[1] == "MovieRating":
+                ssh.cmd_print("yarn logs -applicationId {0}".format(yarn_app[0]))

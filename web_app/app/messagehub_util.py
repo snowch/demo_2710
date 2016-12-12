@@ -36,15 +36,25 @@ producer = setup_producer()
 
 def create_topic_if_required():
     
-    data = { 'name' : app.config['MH_TOPIC_NAME'] }
+    data = { 
+        'name' : app.config['MH_TOPIC_NAME'],
+        'configs'  : { 
+            'retentionMs': 3600000 # 1 hour (this is the minimum)
+        }
+    }
     headers = {
         'content-type': 'application/json',
         'X-Auth-Token' : app.config['MH_API_KEY']
     }
     url = app.config['MH_ADMIN_URL'] + '/admin/topics'
     
+    # TODO remove this for production environments
+    response = requests.delete(url + '/' + app.config['MH_TOPIC_NAME'], headers = headers)
+    print(response.text)
+    
     # create the topic (http POST)
-    requests.post(url, headers = headers, data = json.dumps(data))
+    response = requests.post(url, headers = headers, data = json.dumps(data))
+    print(response.text)
     
 create_topic_if_required()
 

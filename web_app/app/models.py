@@ -23,7 +23,6 @@ CL_MOVIEDB  = app.config['CL_MOVIEDB']
 CL_AUTHDB   = app.config['CL_AUTHDB']
 CL_RATINGDB = app.config['CL_RATINGDB']
 CL_RECOMMENDDB = app.config['CL_RECOMMENDDB']
-CL_EVENTDB = app.config['CL_EVENTDB']
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):

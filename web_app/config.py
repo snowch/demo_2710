@@ -17,6 +17,7 @@ class Config:
 
     cloudant_credentials = vcap['cloudantNoSQLDB'][0]['credentials']
 
+    CL_HOST = cloudant_credentials['host']
     CL_USER = cloudant_credentials['username']
     CL_PASS = cloudant_credentials['password']
     CL_URL  = cloudant_credentials['url']
@@ -27,7 +28,6 @@ class Config:
     CL_AUTHDB   = 'authdb'
     CL_RATINGDB = 'ratingdb'
     CL_RECOMMENDDB = 'recommendationdb'
-    CL_EVENTDB = 'eventdb'
 
     # Redis details
 

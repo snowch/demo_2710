@@ -15,9 +15,8 @@ CL_MOVIEDB  = app.config['CL_MOVIEDB']
 CL_AUTHDB   = app.config['CL_AUTHDB']
 CL_RATINGDB = app.config['CL_RATINGDB']
 CL_RECOMMENDDB = app.config['CL_RECOMMENDDB']
-CL_EVENTDB = app.config['CL_EVENTDB']
 
-CL_DBS = [ CL_MOVIEDB, CL_AUTHDB, CL_RATINGDB, CL_RECOMMENDDB, CL_EVENTDB ]
+CL_DBS = [ CL_MOVIEDB, CL_AUTHDB, CL_RATINGDB, CL_RECOMMENDDB ]
 
 
 # TODO use flask logging rather than print()
