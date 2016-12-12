@@ -117,6 +117,7 @@ def setup_spark():
         echo 'log4j.appender.rolling.maxFileSize=50MB'                                   >> log4j-spark.properties
         echo 'log4j.appender.rolling.maxBackupIndex=5'                                   >> log4j-spark.properties
         echo 'log4j.appender.rolling.file=${spark.yarn.app.container.log.dir}/spark.log' >> log4j-spark.properties
+        #echo 'log4j.appender.rolling.file=/home/snowch/spark.log'                        >> log4j-spark.properties
         echo 'log4j.appender.rolling.encoding=UTF-8'                                     >> log4j-spark.properties
         echo 'log4j.logger.org.apache.spark=WARN'                                        >> log4j-spark.properties
         echo 'log4j.logger.org.eclipse.jetty=WARN'                                       >> log4j-spark.properties
@@ -127,8 +128,9 @@ def setup_spark():
              --master yarn \
              --deploy-mode cluster \
              --properties-file spark_streaming.conf \
-             --files log4j-spark.properties \
+             --files ${HOME}/log4j-spark.properties \
              --conf "spark.driver.extraJavaOptions=-Dlog4j.configuration=log4j-spark.properties" \
+             --conf "spark.driver.extraJavaOptions=-Diop.version=4.2.0.0" \
              --conf "spark.executor.extraJavaOptions=-Dlog4j.configuration=log4j-spark.properties" \
              --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
              ./movie-rating_2.10-1.0.jar > /dev/null 2>&1 &
