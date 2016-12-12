@@ -114,10 +114,10 @@ def setup_spark():
         echo 'log4j.appender.rolling=org.apache.log4j.RollingFileAppender'               >> log4j-spark.properties
         echo 'log4j.appender.rolling.layout=org.apache.log4j.PatternLayout'              >> log4j-spark.properties
         echo 'log4j.appender.rolling.layout.conversionPattern=[%d] %p %m (%c)%n'         >> log4j-spark.properties
+        echo 'log4j.appender.rolling.immediateFlush=true'                                >> log4j-spark.properties
         echo 'log4j.appender.rolling.maxFileSize=50MB'                                   >> log4j-spark.properties
         echo 'log4j.appender.rolling.maxBackupIndex=5'                                   >> log4j-spark.properties
         echo 'log4j.appender.rolling.file=${spark.yarn.app.container.log.dir}/spark.log' >> log4j-spark.properties
-        #echo 'log4j.appender.rolling.file=/home/snowch/spark.log'                        >> log4j-spark.properties
         echo 'log4j.appender.rolling.encoding=UTF-8'                                     >> log4j-spark.properties
         echo 'log4j.logger.org.apache.spark=WARN'                                        >> log4j-spark.properties
         echo 'log4j.logger.org.eclipse.jetty=WARN'                                       >> log4j-spark.properties
@@ -135,12 +135,12 @@ def setup_spark():
              --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
              ./movie-rating_2.10-1.0.jar > /dev/null 2>&1 &
          ''')
-    
+
     # ssh.cmd_print('''
     #     spark-submit --class "MovieRating" \
     #         --properties-file spark_streaming.conf \
     #         --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
-    #         ./movie-rating_2.10-1.0.jar > spark_streaming.log 2>&1 &
+    #         ./movie-rating_2.10-1.0.jar > spark.log 2>&1 &
     #     ''')
 
     (stdin, stdout, stderr) = ssh.exec_command('sleep 5 && yarn application -list')
