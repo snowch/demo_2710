@@ -116,8 +116,7 @@ def setup_spark():
         echo 'log4j.appender.rolling.layout.conversionPattern=[%d] %p %m (%c)%n'         >> log4j-spark.properties
         echo 'log4j.appender.rolling.maxFileSize=50MB'                                   >> log4j-spark.properties
         echo 'log4j.appender.rolling.maxBackupIndex=5'                                   >> log4j-spark.properties
-        echo 'log4j.appender.rolling.file=/home/snowch/spark.log' >> log4j-spark.properties
-        #echo 'log4j.appender.rolling.file=${spark.yarn.app.container.log.dir}/spark.log' >> log4j-spark.properties
+        echo 'log4j.appender.rolling.file=${spark.yarn.app.container.log.dir}/spark.log' >> log4j-spark.properties
         echo 'log4j.appender.rolling.encoding=UTF-8'                                     >> log4j-spark.properties
         echo 'log4j.logger.org.apache.spark=WARN'                                        >> log4j-spark.properties
         echo 'log4j.logger.org.eclipse.jetty=WARN'                                       >> log4j-spark.properties
