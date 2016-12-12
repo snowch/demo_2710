@@ -60,7 +60,7 @@ class Movie:
     def save_rating(movie_id, user_id, rating):
         # FIXME: updating a rating currently fails due to MVCC conflict
         data = {
-            "_id": "user_{0}/rating_{1}".format(user_id, movie_id),
+            "_id": "user_{0}/movie_{1}".format(user_id, movie_id),
             "rating": rating,
             "timestamp": current_milli_time()
         }
@@ -93,7 +93,7 @@ class Movie:
             rating_ids = []
 
             for row in movie_data['rows']:
-                movie_user_key = "movie_{0}/user_{1}".format(row['id'], current_user.get_id())
+                movie_user_key = "user_{0}/movie_{1}".format(current_user.get_id(), row['id'])
 
                 movies[movie_user_key] = Movie(row['id'], row['fields']['name'])
                 if current_user.get_id():
