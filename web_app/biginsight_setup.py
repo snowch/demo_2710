@@ -136,18 +136,46 @@ def setup_spark():
     #          ./movie-rating_2.10-1.0.jar > /dev/null 2>&1 &
     #      ''')
 
-    print('running spark-submit')
+    # The code below is a very nasty hack because I couldn't not get spark working in yarn cluster
+    # mode and I could not figure out how to setup debugging so understand what was going wrong.
+    #
+    # See here: http://stackoverflow.com/questions/41110839/yarn-logs-not-found-until-i-kill-my-spark-streaming-application
 
     ssh.cmd_print('''
-        [[ -f spark-submit.pid ]] && kill `cat spark-submit.pid`
+        if [[ ! -d anaconda2 ]]
+        then
+           wget -c https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86_64.sh
+           bash Anaconda2-4.1.1-Linux-x86_64.sh -b
+        fi
 
-        spark-submit --class "MovieRating" \
-            --properties-file spark_streaming.conf \
-            --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
-            ./movie-rating_2.10-1.0.jar > spark-submit.out 2>&1 &
+        ./anaconda2/bin/python -c 'import supervisor'
+        if [[ "$?" != "0" ]]
+        then
+           ./anaconda2/bin/pip install supervisor
+        fi
 
-        echo $! > spark-submit.pid
-        ''')
+        [[ -e ${HOME}/supervisord.pid ]] && kill `cat ${HOME}/supervisord.pid` && rm ${HOME}/supervisord.pid
+
+        # give supervisord some time to shutdown
+        sleep 10
+
+        ./anaconda2/bin/echo_supervisord_conf > ./supervisord.conf
+        
+cat <<EOF >> ./supervisord.conf
+[program:movie-rating]
+command=spark-submit --class 'MovieRating' --properties-file ${HOME}/spark_streaming.conf --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 ${HOME}/movie-rating_2.10-1.0.jar
+stdout_logfile=${HOME}/spark-streaming-stdout.log       
+stdout_logfile_maxbytes=50MB   
+stdout_logfile_backups=10     
+stdout_events_enabled=false   
+stderr_logfile=${HOME}/spark-streaming-stderr.log
+stderr_logfile_maxbytes=50MB   
+stderr_logfile_backups=10     
+stderr_events_enabled=false
+EOF
+
+        ./anaconda2/bin/supervisord -c ${HOME}/supervisord.conf --pidfile=${HOME}/supervisord.pid
+    ''')
 
     (stdin, stdout, stderr) = ssh.exec_command('sleep 5 && yarn application -list')
     
