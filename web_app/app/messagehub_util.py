@@ -4,6 +4,7 @@ from kafka.errors import KafkaError
 import ssl
 import requests
 import json
+import atexit
 
 from . import app
 
@@ -63,20 +64,19 @@ def setup_consumer():
                              api_version = (0,10),
                              consumer_timeout_ms = 10000,
                              auto_offset_reset = 'earliest',
-                             enable_auto_commit=False
-                             #group_id = uuid1() # consume all messages
+                             enable_auto_commit=False,
+                             group_id = None
                             )
+    return consumer
 
 consumer = setup_consumer()
 
 def peek_messages():
-    if hasattr(consumer, 'message'):
-        for message in consumer:
-            print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+
+    for message in consumer:
+        print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
                                               message.offset, message.key,
                                               message.value))
-    else:
-        print("No messages found in kafka consumer")
 
 def create_topic_if_required():
     
@@ -107,7 +107,12 @@ def send(message):
         result = producer.send(app.config['MH_TOPIC_NAME'], message.encode())
         print(result)
         result = producer.flush()
-        print(result)
+        print()
     except Exception as e:
         print(str(e))
-    
+
+@atexit.register
+def python_shutting_down():
+    print('Disconnecting kafka client')
+    consumer.close()
+    producer.close()

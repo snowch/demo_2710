@@ -47,6 +47,10 @@ def peek_messages():
     "Peek messages in MessageHub"
     messagehub_util.peek_messages()
 
+@manager.command
+def send_message():
+    "Send message to MessageHub"
+    messagehub_util.send('LOGIN_EVENT,333')
 
 if app.debug:
     # debug routes
