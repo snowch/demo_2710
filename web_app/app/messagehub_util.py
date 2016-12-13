@@ -1,4 +1,5 @@
 from kafka import KafkaProducer
+from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 import ssl
 import requests
@@ -28,11 +29,54 @@ def setup_producer():
                              security_protocol = security_protocol,
                              ssl_context = context,
                              sasl_mechanism = sasl_mechanism,
-                             api_version = (0,10))
+                             api_version = (0,10),
+                             batch_size = 0,
+                             retries = 10)
 
     return producer
 
 producer = setup_producer()
+
+
+def setup_consumer():
+
+    bootstrap_servers     = app.config['MH_BROKERS_SASL']
+    sasl_plain_username   = app.config['MH_USER']
+    sasl_plain_password   = app.config['MH_PASSWORD']
+    messagehub_topic_name = app.config['MH_TOPIC_NAME']
+    
+    sasl_mechanism = 'PLAIN'
+    security_protocol = 'SASL_SSL'
+
+    # Create a new context using system defaults, disable all but TLS1.2
+    context = ssl.create_default_context()
+    context.options &= ssl.OP_NO_TLSv1
+    context.options &= ssl.OP_NO_TLSv1_1
+
+    consumer = KafkaConsumer(messagehub_topic_name,
+                             bootstrap_servers = bootstrap_servers,
+                             sasl_plain_username = sasl_plain_username,
+                             sasl_plain_password = sasl_plain_password,
+                             security_protocol = security_protocol,
+                             ssl_context = context,
+                             sasl_mechanism = sasl_mechanism,
+                             api_version = (0,10),
+                             consumer_timeout_ms = 10000,
+                             auto_offset_reset = 'earliest',
+                             enable_auto_commit=False
+                             #group_id = uuid1() # consume all messages
+                            )
+
+consumer = setup_consumer()
+
+def peek_messages():
+    if hasattr(consumer, 'message'):
+        for message in consumer:
+            print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+                                              message.offset, message.key,
+                                              message.value))
+    else:
+        print("No messages found in kafka consumer")
 
 def create_topic_if_required():
     
@@ -48,18 +92,22 @@ def create_topic_if_required():
     }
     url = app.config['MH_ADMIN_URL'] + '/admin/topics'
     
-    # TODO remove this for production environments
-    response = requests.delete(url + '/' + app.config['MH_TOPIC_NAME'], headers = headers)
-    print(response.text)
+    # response = requests.delete(url + '/' + app.config['MH_TOPIC_NAME'], headers = headers)
+    # print('deleting topic', response.text)
     
     # create the topic (http POST)
     response = requests.post(url, headers = headers, data = json.dumps(data))
-    print(response.text)
+    # print('creating topic', response.text)
     
 create_topic_if_required()
 
 def send(message):
     print('sending {0} to {1}'.format(message, app.config['MH_TOPIC_NAME']))
-    producer.send(app.config['MH_TOPIC_NAME'], message.encode())
-    producer.flush()
+    try:
+        result = producer.send(app.config['MH_TOPIC_NAME'], message.encode())
+        print(result)
+        result = producer.flush()
+        print(result)
+    except Exception as e:
+        print(str(e))
     
