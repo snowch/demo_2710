@@ -59,6 +59,7 @@ def create_topic_if_required():
 create_topic_if_required()
 
 def send(message):
+    print('sending {0} to {1}'.format(message, app.config['MH_TOPIC_NAME']))
     producer.send(app.config['MH_TOPIC_NAME'], message.encode())
     producer.flush()
     

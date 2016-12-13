@@ -123,25 +123,31 @@ def setup_spark():
         echo 'log4j.logger.org.eclipse.jetty=WARN'                                       >> log4j-spark.properties
     """)
     
-    ssh.cmd_print('''
-         spark-submit --class "MovieRating" \
-             --master yarn \
-             --deploy-mode cluster \
-             --properties-file spark_streaming.conf \
-             --files ${HOME}/log4j-spark.properties \
-             --conf "spark.driver.extraJavaOptions=-Dlog4j.configuration=log4j-spark.properties" \
-             --conf "spark.driver.extraJavaOptions=-Diop.version=4.2.0.0" \
-             --conf "spark.executor.extraJavaOptions=-Dlog4j.configuration=log4j-spark.properties" \
-             --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
-             ./movie-rating_2.10-1.0.jar > /dev/null 2>&1 &
-         ''')
-
     # ssh.cmd_print('''
-    #     spark-submit --class "MovieRating" \
-    #         --properties-file spark_streaming.conf \
-    #         --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
-    #         ./movie-rating_2.10-1.0.jar > spark.log 2>&1 &
-    #     ''')
+    #      spark-submit --class "MovieRating" \
+    #          --master yarn \
+    #          --deploy-mode cluster \
+    #          --properties-file spark_streaming.conf \
+    #          --files ${HOME}/log4j-spark.properties \
+    #          --conf "spark.driver.extraJavaOptions=-Dlog4j.configuration=log4j-spark.properties" \
+    #          --conf "spark.driver.extraJavaOptions=-Diop.version=4.2.0.0" \
+    #          --conf "spark.executor.extraJavaOptions=-Dlog4j.configuration=log4j-spark.properties" \
+    #          --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
+    #          ./movie-rating_2.10-1.0.jar > /dev/null 2>&1 &
+    #      ''')
+
+    print('running spark-submit')
+
+    ssh.cmd_print('''
+        [[ -f spark-submit.pid ]] && kill `cat spark-submit.pid`
+
+        spark-submit --class "MovieRating" \
+            --properties-file spark_streaming.conf \
+            --packages cloudant-labs:spark-cloudant:1.6.4-s_2.10 \
+            ./movie-rating_2.10-1.0.jar > spark-submit.out 2>&1 &
+
+        echo $! > spark-submit.pid
+        ''')
 
     (stdin, stdout, stderr) = ssh.exec_command('sleep 5 && yarn application -list')
     

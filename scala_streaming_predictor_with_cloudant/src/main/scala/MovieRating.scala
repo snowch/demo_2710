@@ -48,17 +48,11 @@ object MovieRating {
     kafkaProps.setConfig("api_key",             sc.getConf.get("spark.api_key"))
     kafkaProps.setConfig("kafka_rest_url",      sc.getConf.get("spark.kafka_rest_url"))
     
-    // the topic for responses
-    val messagehub_response_topic_name = sc.getConf.get("spark.messagehub_topic_name") + "_responses" 
-    
     kafkaProps.createConfiguration()
     
     val properties = new Properties()
     kafkaProps.toImmutableMap.foreach {case (key, value) => properties.setProperty (key, value)}
     properties.setProperty("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
-    
-    // create a producer for sending responses
-    val kafkaProducer = new KafkaProducer[String, String]( properties )
     
     val ssc = new StreamingContext( sc, Seconds(10) )
     
