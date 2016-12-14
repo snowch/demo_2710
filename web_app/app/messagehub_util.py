@@ -73,10 +73,13 @@ consumer = setup_consumer()
 
 def peek_messages():
 
-    for message in consumer:
-        print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-                                              message.offset, message.key,
-                                              message.value))
+    try:
+        for message in consumer:
+            print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+                                                  message.offset, message.key,
+                                                  message.value))
+    except Exception as e:
+        print("No messages found:", str(e))
 
 def create_topic_if_required():
     
@@ -109,10 +112,17 @@ def send(message):
         result = producer.flush()
         print()
     except Exception as e:
-        print(str(e))
+        print("Couldn't send message:", str(e))
 
 @atexit.register
 def python_shutting_down():
     print('Disconnecting kafka client')
-    consumer.close()
-    producer.close()
+    try:
+        consumer.close()
+    except Exception as e:
+        print("Problem closing consumer:", str(e))
+    
+    try:
+        producer.close(10)
+    except Exception as e:
+        print("Problem closing producer:", str(e))
