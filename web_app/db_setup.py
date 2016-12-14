@@ -136,6 +136,25 @@ def populate_rating_db():
 
     set_next_user_id(max_user_id + 1)
 
+def create_latest_recommendations_index():
+
+    ddoc_fn = '''
+function(doc) {
+  emit([doc.user, doc.timestamp], null);
+}
+'''    
+    db = cloudant_client[CL_RECOMMENDDB]
+    index_name = 'latest-recommendation-index'
+
+    ddoc = DesignDocument(db, index_name)
+    if ddoc.exists():
+        ddoc.fetch()
+        ddoc.update_view(index_name, ddoc_fn)
+        print('updated', index_name)
+    else:
+        ddoc.add_view(index_name, ddoc_fn)
+        print('created', index_name)
+    ddoc.save()
 
 def create_moviedb_indexes():
 

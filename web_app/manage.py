@@ -1,7 +1,7 @@
 from flask.ext.script import Manager, Server
 from app import app
 import config
-from db_setup import delete_dbs, create_dbs, populate_movie_db, populate_rating_db, create_moviedb_indexes, create_authdb_indexes, create_test_user
+from db_setup import delete_dbs, create_dbs, populate_movie_db, populate_rating_db, create_moviedb_indexes, create_authdb_indexes, create_latest_recommendations_index, create_test_user
 from biginsight_setup import setup_spark
 from app import messagehub_util 
 
@@ -30,6 +30,7 @@ def db_setup():
     create_dbs()
     create_moviedb_indexes()
     create_authdb_indexes()
+    create_latest_recommendations_index()
 
 @manager.command
 def db_populate():
