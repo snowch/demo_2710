@@ -13,6 +13,7 @@ from . import app, login_manager
 from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
 from app.messagehub_util import send
+import collections
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -40,6 +41,54 @@ class Event:
     @staticmethod
     def login_event(user_id):
         send("{0},{1}".format(Event.LOGIN_EVENT, user_id))
+
+class Recommendation:
+
+    def __init__(self, movie, rating, timestamp):
+        self.movie_id = movie
+        self.rating = rating
+        self.timestamp = timestamp
+
+    @staticmethod
+    def get_recommendations(user_id):
+
+        end_point  = ''
+        end_point += '{0}/{1}/_design/{2}/_view/{2}?'.format(CL_URL, CL_RECOMMENDDB, 'latest-recommendation-index')
+        end_point += 'descending=true&limit=25&include_docs=true&'
+        end_point += 'startkey=[{0},9999999999]&endkey=[{0},0]'.format(user_id)
+
+        response = cloudant_client.r_session.get(end_point)
+        recommendation_data = json.loads(response.text)
+
+        # print(recommendation_data)
+
+        recommendations = {}
+
+        processed_movie_ids = []
+
+        if 'rows' in recommendation_data:
+            for row in recommendation_data['rows']:
+                if 'doc' in row:
+                    product   = row['doc']['product'] 
+                    rating    = row['doc']['rating']
+                    timestamp = row['doc']['timestamp']
+ 
+                    if product not in processed_movie_ids:
+                        recommendations[rating] = Recommendation(product, rating, timestamp)
+                        processed_movie_ids.append(product)
+
+        # sort by rating
+        ordered_recommendations = collections.OrderedDict(sorted(recommendations.items(), reverse=True))
+
+        return [ v for k,v in ordered_recommendations.items()]
+
+
+    def as_dict(self):
+        return dict(
+                    movie_id = self.movie_id,
+                    name = self.name,
+                    rating = self.rating
+                )
 
 class Movie:
 

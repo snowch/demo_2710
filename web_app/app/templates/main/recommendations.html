@@ -7,7 +7,26 @@
 
 <div>
 {% if current_user.is_authenticated %}
-    <b>Movie recommendations coming soon...</b>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Movie ID</th>
+      <th>Rating</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for recommendation in recommendations %}
+  <tr>
+      <td>{{ recommendation.movie_id }}</td>
+      <td>{{ recommendation.rating }}</td>
+      <td>{{ recommendation.timestamp }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
 {% else %}
     <b><a href="{{ url_for('auth.login') }}">Login</a> to get Movie recommendations...</b>
 {% endif %}
@@ -16,8 +35,8 @@
 <hr/>
 
 <div>
-    <p>Recommendations will be provided by spark (IBM Spark as a Service or BigInsights on Cloud) using MessageHub as the connection between this application and spark.
-    To see how the recommendation model is built and then called interacted with via Spark Streaming, see here: <a target="_new" href="https://github.com/snowch/demo_2710/blob/master/README.md">github</a></p>
+    <p>Recommendations are provided by spark (IBM Spark as a Service or BigInsights on Cloud) using MessageHub as the connection between this application and spark.
+    <p>To see how the recommendation model is built and then called interacted with via Spark Streaming, see here: <a target="_new" href="https://github.com/snowch/demo_2710/blob/master/README.md">github</a></p>
 </div>
 
 {% endblock %}

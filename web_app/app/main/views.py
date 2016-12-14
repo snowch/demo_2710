@@ -1,9 +1,9 @@
 from flask import Flask, render_template, session, redirect, url_for, request
-from flask.ext.login import login_required
+from flask.ext.login import login_required, current_user
 from . import forms
 from . import main 
 from .. import app
-from ..models import Movie
+from ..models import Movie, Recommendation
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
@@ -20,7 +20,8 @@ def index():
 
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
-    return render_template('/main/recommendations.html')
+    recommendations = Recommendation.get_recommendations(current_user.get_id())
+    return render_template('/main/recommendations.html', recommendations=recommendations)
 
 @main.route('/set_search_string', methods=['POST'])
 def set_search_string():

@@ -148,11 +148,8 @@ def setup_spark():
            bash Anaconda2-4.1.1-Linux-x86_64.sh -b
         fi
 
-        ./anaconda2/bin/python -c 'import supervisor'
-        if [[ "$?" != "0" ]]
-        then
-           ./anaconda2/bin/pip install supervisor
-        fi
+        # if we can't import supervisor, we need to install it
+        ./anaconda2/bin/python -c 'import supervisor' || ./anaconda2/bin/pip install supervisor
 
         [[ -e ${HOME}/supervisord.pid ]] && kill `cat ${HOME}/supervisord.pid` && rm ${HOME}/supervisord.pid
 
