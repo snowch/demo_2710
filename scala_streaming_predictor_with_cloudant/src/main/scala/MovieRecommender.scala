@@ -8,7 +8,11 @@ import org.apache.spark.mllib.recommendation.ALS
 import org.apache.spark.mllib.recommendation.Rating
 import org.apache.log4j.LogManager
 
-
+case class RatingWithTimestamp (
+    user: Int,
+    product: Int,
+    rating: Double,
+    timestamp: Long)
 
 class MovieRecommender (sc:SparkContext) {
   
@@ -62,9 +66,20 @@ class MovieRecommender (sc:SparkContext) {
     
     val ratings:Array[Rating] = model.recommendProducts(userId, 25)
     
+    val timestamp: Long = System.currentTimeMillis / 1000
+    
+    val ratingsWithTimestamp:Array[RatingWithTimestamp] = 
+      ratings.map { 
+         rating => RatingWithTimestamp(rating.user, rating.product, rating.rating, timestamp) 
+         }
+    
+    ratingsWithTimestamp.foreach { rating => 
+      log.info(s"******** ${rating.user} ${rating.product} ${rating.rating} ${rating.timestamp} ********")
+    }
+    
     log.info(s"******** Found $ratings recommended movies for $userId ********")
     
-    val rdd = sc.parallelize(ratings)
+    val rdd = sc.parallelize(ratingsWithTimestamp)
     
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
