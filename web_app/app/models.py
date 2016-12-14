@@ -29,6 +29,8 @@ class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Movie):
             return obj.as_dict()
+        if isinstance(obj, Recommendation):
+            return obj.as_dict()
         else:
             JSONEncoder.default(self, obj)
 
@@ -48,6 +50,7 @@ class Recommendation:
         self.movie_id = movie
         self.rating = rating
         self.timestamp = timestamp
+        self.movie_name = None
 
     @staticmethod
     def get_recommendations(user_id):
@@ -64,18 +67,33 @@ class Recommendation:
 
         recommendations = {}
 
-        processed_movie_ids = []
+        processed_movie_ids = {}
 
         if 'rows' in recommendation_data:
             for row in recommendation_data['rows']:
                 if 'doc' in row:
-                    product   = row['doc']['product'] 
+                    product   = str(row['doc']['product'])
                     rating    = row['doc']['rating']
                     timestamp = row['doc']['timestamp']
  
                     if product not in processed_movie_ids:
-                        recommendations[rating] = Recommendation(product, rating, timestamp)
-                        processed_movie_ids.append(product)
+                        recommendation = Recommendation(product, rating, timestamp)
+                        recommendations[rating] = recommendation
+                        processed_movie_ids[product] = recommendation
+
+        # get movie names
+        keys = urllib.parse.quote_plus(json.dumps(list(processed_movie_ids)))
+        end_point = '{0}/{1}/_all_docs?keys={2}&include_docs=true'.format ( CL_URL, CL_MOVIEDB, keys)
+        response = cloudant_client.r_session.get(end_point)
+        movie_data = json.loads(response.text)
+
+        if 'rows' in movie_data:
+            for row in movie_data['rows']:
+                if 'doc' in row:
+                    movie_id   = row['key']
+                    movie_name = row['doc']['name']
+                    print(movie_id, movie_name)
+                    processed_movie_ids[movie_id].movie_name = movie_name
 
         # sort by rating
         ordered_recommendations = collections.OrderedDict(sorted(recommendations.items(), reverse=True))
@@ -86,7 +104,7 @@ class Recommendation:
     def as_dict(self):
         return dict(
                     movie_id = self.movie_id,
-                    name = self.name,
+                    movie_name = self.movie_name,
                     rating = self.rating
                 )
 

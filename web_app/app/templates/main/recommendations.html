@@ -12,6 +12,7 @@
   <thead>
     <tr>
       <th>Movie ID</th>
+      <th>Movie Name</th>
       <th>Rating</th>
       <th>Timestamp</th>
     </tr>
@@ -20,6 +21,7 @@
   {% for recommendation in recommendations %}
   <tr>
       <td>{{ recommendation.movie_id }}</td>
+      <td>{{ recommendation.movie_name }}</td>
       <td>{{ recommendation.rating }}</td>
       <td>{{ recommendation.timestamp }}</td>
   </tr>
