@@ -92,7 +92,6 @@ class Recommendation:
                 if 'doc' in row:
                     movie_id   = row['key']
                     movie_name = row['doc']['name']
-                    print(movie_id, movie_name)
                     processed_movie_ids[movie_id].movie_name = movie_name
 
         # sort by rating
