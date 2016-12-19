@@ -8,26 +8,32 @@
 <div>
 {% if current_user.is_authenticated %}
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Movie ID</th>
-      <th>Movie Name</th>
-      <th>Rating</th>
-      <th>Timestamp</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for recommendation in recommendations %}
-  <tr>
-      <td>{{ recommendation.movie_id }}</td>
-      <td>{{ recommendation.movie_name }}</td>
-      <td>{{ recommendation.rating }}</td>
-      <td>{{ recommendation.timestamp }}</td>
-  </tr>
-  {% endfor %}
-  </tbody>
-</table>
+    {% if recommendations %}
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Movie ID</th>
+          <th>Movie Name</th>
+          <th>Rating</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for recommendation in recommendations %}
+      <tr>
+          <td>{{ recommendation.movie_id }}</td>
+          <td>{{ recommendation.movie_name }}</td>
+          <td>{{ recommendation.rating }}</td>
+          <td>{{ recommendation.timestamp }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    {% else %}
+        No recommendations found - please try later.
+    {% endif %}
 
 {% else %}
     <b><a href="{{ url_for('auth.login') }}">Login</a> to get Movie recommendations...</b>
