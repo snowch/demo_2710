@@ -45,10 +45,8 @@ def create_dbs():
                 if not db == CL_AUTHDB:
                     print('Making {0} database readable by everyone'.format(db))
 
-                    # FIXME: https://github.com/cloudant/python-cloudant/issues/261
-                    # with SecurityDocument(db_handle) as security_document:
-                    #     print(security_document)
-                    #     security_document['Cloudant']['nobody'] = ['_reader']
+                    with SecurityDocument(db_handle) as security_document:
+                        security_document.update({'cloudant': {'nobody': ['_reader']}})
 
             else:
                 print('Problem creating database', db)
