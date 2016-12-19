@@ -1,6 +1,6 @@
 applications:
-- name: music-recommender-flask
-  host: music-recommender-demo
+- name: movie-recommender-flask
+  host: movie-recommender-demo
   memory: 128M
   instances: 1
   path: .
