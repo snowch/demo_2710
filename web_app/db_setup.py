@@ -7,6 +7,7 @@ from app.redis_db import set_next_user_id
 from app import models
 
 from cloudant.design_document import DesignDocument
+from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
 
 CL_URL      = app.config['CL_URL']
@@ -39,6 +40,16 @@ def create_dbs():
             db_handle = cloudant_client.create_database(db)
             if db_handle.exists():
                 print('Created database', db)
+       
+                # Make all dbs except for the Authentication DB readable by everyone
+                if not db == CL_AUTHDB:
+                    print('Making {0} database readable by everyone'.format(db))
+
+                    # FIXME: https://github.com/cloudant/python-cloudant/issues/261
+                    # with SecurityDocument(db_handle) as security_document:
+                    #     print(security_document)
+                    #     security_document['Cloudant']['nobody'] = ['_reader']
+
             else:
                 print('Problem creating database', db)
 
@@ -128,9 +139,9 @@ def populate_rating_db():
                     print('chunk: ', chunk, ' num saved: ', num_ok)
                     bulk_docs = []
 
-                # only load 10000 ratings for now
-                if chunk % 50000 == 0:
-                    break
+                # uncomment to only load 10000 ratings 
+                #if chunk % 50000 == 0:
+                #    break
             else:
                 break
 
