@@ -7,7 +7,7 @@ class SshUtil:
         
     def __init__(self):
         
-        with open('./biginsight_credentials.json') as data_file:
+        with open('./etc/biginsight_credentials.json') as data_file:
             credentials = json.load(data_file)
         
         hostname = credentials['hostname']
