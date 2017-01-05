@@ -12,7 +12,6 @@ import urllib
 from . import app, login_manager
 from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
-from app.messagehub_util import send
 import collections
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -36,68 +35,65 @@ class CustomJSONEncoder(JSONEncoder):
 
 app.json_encoder = CustomJSONEncoder
 
-class Event:
+class RecommendationsNotGeneratedException(Exception):
+    pass
 
-    LOGIN_EVENT = "LOGIN_EVENT"
-
-    @staticmethod
-    def login_event(user_id):
-        send("{0},{1}".format(Event.LOGIN_EVENT, user_id))
+class RecommendationsNotGeneratedForUserException(Exception):
+    pass
 
 class Recommendation:
 
-    def __init__(self, movie, rating, timestamp):
-        self.movie_id = movie
+    def __init__(self, movie_id, movie_name, rating):
+        self.movie_id = movie_id
+        self.movie_name = movie_name
         self.rating = rating
-        self.timestamp = timestamp
-        self.movie_name = None
 
     @staticmethod
     def get_recommendations(user_id):
 
-        end_point  = ''
-        end_point += '{0}/{1}/_design/{2}/_view/{2}?'.format(CL_URL, CL_RECOMMENDDB, 'latest-recommendation-index')
-        end_point += 'descending=true&limit=25&include_docs=true&'
-        end_point += 'startkey=[{0},9999999999]&endkey=[{0},0]'.format(user_id)
+        meta_db = cloudant_client[CL_RECOMMENDDB]
 
-        response = cloudant_client.r_session.get(end_point)
-        recommendation_data = json.loads(response.text)
+        # get recommendation_metadata document with last run details
+        meta_doc = meta_db['recommendation_metadata']
+        meta_doc.fetch()
+        if not meta_doc.exists():
+            print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
+            raise RecommendationsNotGeneratedException
+       
+        # get name of db for latest recommendations
+        latest_recommendations_db = meta_doc['latest_db']
+   
+        recommendations_db = cloudant_client[latest_recommendations_db]
+        if not recommendations_db.exists():
+            print('recommendationsdb not found', latest_recommendations_db)
+            raise RecommendationsNotGeneratedException
 
-        # print(recommendation_data)
+        # get recommendations for user
+        recommendations = recommendations_db[user_id]
+        if not recommendations:
+            raise RecommendationsNotGeneratedForUserException
 
-        recommendations = {}
-
-        processed_movie_ids = {}
-
-        if 'rows' in recommendation_data:
-            for row in recommendation_data['rows']:
-                if 'doc' in row:
-                    product   = str(row['doc']['product'])
-                    rating    = row['doc']['rating']
-                    timestamp = row['doc']['timestamp']
- 
-                    if product not in processed_movie_ids:
-                        recommendation = Recommendation(product, rating, timestamp)
-                        recommendations[rating] = recommendation
-                        processed_movie_ids[product] = recommendation
+        movie_ids = [ str(rec[1]) for rec in recommendations['recommendations'] ]
+        ratings = [ str(rec[2]) for rec in recommendations['recommendations'] ]
 
         # get movie names
-        keys = urllib.parse.quote_plus(json.dumps(list(processed_movie_ids)))
+        keys = urllib.parse.quote_plus(json.dumps(list(movie_ids)))
         end_point = '{0}/{1}/_all_docs?keys={2}&include_docs=true'.format ( CL_URL, CL_MOVIEDB, keys)
         response = cloudant_client.r_session.get(end_point)
         movie_data = json.loads(response.text)
+
+        recommendations = []
 
         if 'rows' in movie_data:
             for row in movie_data['rows']:
                 if 'doc' in row:
                     movie_id   = row['key']
                     movie_name = row['doc']['name']
-                    processed_movie_ids[movie_id].movie_name = movie_name
+                    rating = ratings[movie_ids.index(movie_id)]
+                    recommendation = Recommendation(movie_id, movie_name, rating)
+                    recommendations.append(recommendation)
 
-        # sort by rating
-        ordered_recommendations = collections.OrderedDict(sorted(recommendations.items(), reverse=True))
-
-        return [ v for k,v in ordered_recommendations.items()]
+        return recommendations
 
 
     def as_dict(self):

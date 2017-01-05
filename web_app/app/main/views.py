@@ -1,9 +1,9 @@
-from flask import Flask, render_template, session, redirect, url_for, request
+from flask import Flask, render_template, session, redirect, url_for, request, flash
 from flask.ext.login import login_required, current_user
 from . import forms
 from . import main 
 from .. import app
-from ..models import Movie, Recommendation
+from ..models import Movie, Recommendation, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
@@ -20,7 +20,15 @@ def index():
 
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
-    recommendations = Recommendation.get_recommendations(current_user.get_id())
+    try:
+        recommendations = Recommendation.get_recommendations(current_user.get_id())
+    except RecommendationsNotGeneratedException:
+        flash('No recommendations available - the Recommendation process has not run yet.') 
+        return render_template('/main/recommendations.html', recommendations=[])
+    except RecommendationsNotGeneratedForUserException:
+        flash('No Recommendations found for user, please rate some movies and wait for the next recommendation process to run.') 
+        return render_template('/main/recommendations.html', recommendations=[])
+
     return render_template('/main/recommendations.html', recommendations=recommendations)
 
 @main.route('/set_search_string', methods=['POST'])

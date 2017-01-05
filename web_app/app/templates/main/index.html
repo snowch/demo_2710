@@ -8,11 +8,9 @@
 
 {% if movies %}
 
-    {% if not current_user.is_authenticated %}
-    <b>Album ratings are not displayed.</b><br>
-    <a href="{{ url_for('auth.login') }}">Login</a> to show your ratings...
-    <hr/>
-    {% endif %}
+    <b>Movie Search Results.</b>
+
+    <hr>
 
 <table class="table table-striped">
   <thead>
@@ -44,6 +42,12 @@
   {% endfor %}
   </tbody>
 </table>
+
+    {% if not current_user.is_authenticated %}
+    <em><b>Note:</b></em> Album ratings are not displayed because you are not logged in. <a href="{{ url_for('auth.login') }}">Login</a> to show your ratings...
+    <hr/>
+    {% endif %}
+
 {% else %}
     <li><em>No records found - search for movie to continue.</em>
 {% endif %}

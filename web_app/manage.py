@@ -2,8 +2,6 @@ from flask.ext.script import Manager, Server
 from app import app
 import config
 from db_setup import delete_dbs, create_dbs, populate_movie_db, populate_rating_db, create_moviedb_indexes, create_authdb_indexes, create_latest_recommendations_index, create_test_user
-from biginsight_setup import setup_spark
-from app import messagehub_util 
 
 port = app.config['PORT']
 server = Server(host="0.0.0.0", port=port)
@@ -37,21 +35,6 @@ def db_populate():
     "Populate Cloudant databases"
     populate_movie_db()
     populate_rating_db()
-    
-@manager.command
-def bioc_setup():
-    "Setup spark job on BIoC"
-    setup_spark()
-
-@manager.command
-def peek_messages():
-    "Peek messages in MessageHub"
-    messagehub_util.peek_messages()
-
-@manager.command
-def send_message():
-    "Send message to MessageHub"
-    messagehub_util.send('LOGIN_EVENT,333')
 
 if app.debug:
     # debug routes

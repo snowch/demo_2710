@@ -16,7 +16,6 @@
           <th>Movie ID</th>
           <th>Movie Name</th>
           <th>Rating</th>
-          <th>Timestamp</th>
         </tr>
       </thead>
       <tbody>
@@ -25,7 +24,6 @@
           <td>{{ recommendation.movie_id }}</td>
           <td>{{ recommendation.movie_name }}</td>
           <td>{{ recommendation.rating }}</td>
-          <td>{{ recommendation.timestamp }}</td>
       </tr>
       {% endfor %}
       </tbody>
@@ -43,8 +41,7 @@
 <hr/>
 
 <div>
-    <p>Recommendations are provided by spark (IBM Spark as a Service or BigInsights on Cloud) using MessageHub as the connection between this application and spark.
-    <p>To see how the recommendation model is built and then called interacted with via Spark Streaming, see here: <a target="_new" href="https://github.com/snowch/demo_2710/blob/master/README.md">github</a></p>
+    <p>Recommendations are provided by spark (IBM Spark as a Service)
 </div>
 
 {% endblock %}
