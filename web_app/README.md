@@ -32,10 +32,10 @@ Run locally
 Push to bluemix
 
  - edit manifest.yml
- - provide a unique host
- - change the name of the services to reflect
-   - your cloudant service name
-   - your redis service name
+   - provide a unique host
+   - change the name of the services to reflect
+     - your cloudant service name
+     - your redis service name
 
 Then run
 
