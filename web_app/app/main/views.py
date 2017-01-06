@@ -21,7 +21,6 @@ def index():
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
 
-
     try:
         timestamp = Recommendation.get_latest_recommendation_timestamp()
         recommendations = Recommendation.get_recommendations(current_user.get_id())
@@ -30,7 +29,7 @@ def recommendations():
         return render_template('/main/recommendations.html', recommendations=[])
     except RecommendationsNotGeneratedForUserException:
         flash('No Recommendations found for user, please rate some movies and wait for the next recommendation process to run.') 
-        return render_template('/main/recommendations.html', recommendations=[])
+        return render_template('/main/recommendations.html', recommendations=[], timestamp=timestamp)
 
     return render_template('/main/recommendations.html', recommendations=recommendations, timestamp=timestamp)
 

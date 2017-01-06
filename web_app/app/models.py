@@ -65,6 +65,9 @@ class Recommendation:
     @staticmethod
     def get_recommendations(user_id):
 
+        if not current_user.is_authenticated:
+            return []
+
         meta_db = cloudant_client[CL_RECOMMENDDB]
 
         # get recommendation_metadata document with last run details
