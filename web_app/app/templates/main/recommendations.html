@@ -8,6 +8,7 @@
 <div>
 {% if current_user.is_authenticated %}
 
+
     {% if recommendations %}
 
     <table class="table table-striped">
@@ -41,7 +42,9 @@
 <hr/>
 
 <div>
-    <p>Recommendations are provided by spark (IBM Spark as a Service)
+    <p>Recommendations are provided by spark (IBM Spark as a Service) and are scheduled to run every hour - last run on: <font color="red">{{ timestamp }}</font>
+
+    <hr/>
 </div>
 
 {% endblock %}

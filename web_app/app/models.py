@@ -49,6 +49,20 @@ class Recommendation:
         self.rating = rating
 
     @staticmethod
+    def get_latest_recommendation_timestamp():
+
+        meta_db = cloudant_client[CL_RECOMMENDDB]
+
+        # get recommendation_metadata document with last run details
+        meta_doc = meta_db['recommendation_metadata']
+        meta_doc.fetch()
+        if not meta_doc.exists():
+            print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
+            raise RecommendationsNotGeneratedException
+       
+        return meta_doc['timestamp']
+
+    @staticmethod
     def get_recommendations(user_id):
 
         meta_db = cloudant_client[CL_RECOMMENDDB]
