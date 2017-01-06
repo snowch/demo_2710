@@ -86,12 +86,13 @@ class Recommendation:
             raise RecommendationsNotGeneratedException
 
         # get recommendations for user
-        recommendations = recommendations_db[user_id]
-        if not recommendations:
-            raise RecommendationsNotGeneratedForUserException
+        try:
+            recommendations = recommendations_db[user_id]
 
-        movie_ids = [ str(rec[1]) for rec in recommendations['recommendations'] ]
-        ratings = [ str(rec[2]) for rec in recommendations['recommendations'] ]
+            movie_ids = [ str(rec[1]) for rec in recommendations['recommendations'] ]
+            ratings = [ str(rec[2]) for rec in recommendations['recommendations'] ]
+        except KeyError:
+            raise RecommendationsNotGeneratedForUserException
 
         # get movie names
         keys = urllib.parse.quote_plus(json.dumps(list(movie_ids)))
