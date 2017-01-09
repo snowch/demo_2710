@@ -10,7 +10,11 @@
 
     <b>Movie Search Results.</b>
 
+    {% if current_user.is_authenticated %}
     <hr>
+    Movie ratings are from <b>1</b> (worst) to <b>5</b> (best).
+    <hr>
+    {% endif %}
 
 <table class="table table-striped">
   <thead>
@@ -49,7 +53,33 @@
     {% endif %}
 
 {% else %}
-    <li><em>No records found - search for movie to continue.</em>
+<h2>Overview</h2>
+<p>Welcome to this demo movie recommender application.  This demo has been installed with approximately four thousand movies and one million ratings from the <a href="http://grouplens.org/datasets/movielens/1m/">MovieLens 1M Dataset</a>.  The purpose of this web application is to allow users to search for movies, rate movies, and receive recommendations for movies based on their ratings.
+<p>To get started:
+    <ul>
+        <li>Register for an account</li>
+        <li>Login to your account</li>
+        <li>Search for movies</li>
+        <li>Rate a few movies</li>
+        <li>Receive movie recommendations</li>
+    </ul>
+    <p><b>NOTE:</b> The goal of this webapp is to show Apache spark functionality so lots of useful functionality is missing that you would expect in a commercial movie recommendation web site.
+    <h2>Technologies</h2>
+    <p>The technologies used in this demo are:
+    <ul>
+        <li>IBM Bluemix for hosting the web application and services</li> 
+        <li>Python flask application (this application)</li>
+        <li>IBM Cloudant NoSQL for storing movies, ratings, user accounts and recommendations</li>
+        <li>IBM Compose Redis for maintaining an Atomic Increment counter for ID fields for user accounts</li>
+        <li>IBM Datascience Experience (DSX) and Spark as a Service for:</li>
+           <ul>
+               <li>exploring data and analysing ratings</li>
+               <li>training and testing a recommendation model</li>
+               <li>retraining recommendation model hourly</li>
+               <li>generating recommendations and saving to Cloudant</li>
+           </ul>
+        </li>
+    </ul>
 {% endif %}
 
 {% endblock %}
