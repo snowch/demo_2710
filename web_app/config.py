@@ -2,7 +2,7 @@ import os, json
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string' 
-    PORT = os.getenv('VCAP_APP_PORT', '5000')
+    PORT = os.getenv('PORT', '5000')
 
     vcap_services = os.getenv("VCAP_SERVICES")
     if not vcap_services:
