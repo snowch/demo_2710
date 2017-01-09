@@ -5,6 +5,17 @@ from . import main
 from .. import app
 from ..models import Movie, Recommendation, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
 
+@main.route('/home', methods=['GET'])
+def home():
+
+    session['search_string'] = None
+    session['movies'] = []
+
+    return render_template('/main/index.html', 
+            name = session.get('search_string'),
+            movies = session.get('movies'))
+
+
 @main.route('/', methods=['GET', 'POST'])
 def index():
 
