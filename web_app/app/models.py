@@ -13,6 +13,7 @@ from . import app, login_manager
 from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
 import collections
+import numpy as np
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -35,6 +36,25 @@ class CustomJSONEncoder(JSONEncoder):
 
 app.json_encoder = CustomJSONEncoder
 
+
+def json_numpy_obj_hook(dct):
+    # see http://stackoverflow.com/a/24375113/1033422
+
+    import base64
+    import json
+    import numpy as np
+
+    """Decodes a previously encoded numpy ndarray with proper shape and dtype.
+
+    :param dct: (dict) json encoded ndarray
+    :return: (ndarray) if input was an encoded ndarray
+    """
+    if isinstance(dct, dict) and '__ndarray__' in dct:
+        data = base64.b64decode(dct['__ndarray__'])
+        return np.frombuffer(data, dct['dtype']).reshape(dct['shape'])
+    return dct
+
+
 class RecommendationsNotGeneratedException(Exception):
     pass
 
@@ -42,6 +62,9 @@ class RecommendationsNotGeneratedForUserException(Exception):
     pass
 
 class Recommendation:
+
+    latest_recommendations_db = None
+    Vt = None
 
     def __init__(self, movie_id, movie_name, rating):
         self.movie_id = movie_id
@@ -79,20 +102,48 @@ class Recommendation:
        
         # get name of db for latest recommendations
         latest_recommendations_db = meta_doc['latest_db']
-   
-        recommendations_db = cloudant_client[latest_recommendations_db]
-        if not recommendations_db.exists():
+
+        if not Recommendation.latest_recommendations_db or \
+           Recommendation.latest_recommendations_db < latest_recommendations_db:
+
+            Recommendation.latest_recommendations_db = latest_recommendations_db
+
+            vtdata = meta_doc.get_attachment('vtdata', attachment_type='text')
+            Vt = json.loads(vtdata, object_hook=json_numpy_obj_hook)
+            Recommendation.Vt = Vt
+  
+        try:
+            recommendations_db = cloudant_client[latest_recommendations_db]
+            if not recommendations_db.exists():
+                print('recommendationsdb not found', latest_recommendations_db)
+                raise RecommendationsNotGeneratedException
+        except KeyError:
+            # FIXME - we shouldn't need to do exists() and handle KeyError
             print('recommendationsdb not found', latest_recommendations_db)
             raise RecommendationsNotGeneratedException
 
         # get recommendations for user
         try:
-            recommendations = recommendations_db[user_id]
-
-            movie_ids = [ str(rec[1]) for rec in recommendations['recommendations'] ]
-            ratings = [ str(rec[2]) for rec in recommendations['recommendations'] ]
+            recommendations_doc = recommendations_db[user_id]
+            movie_ids = [ str(rec[1]) for rec in recommendations_doc['recommendations'] ]
+            ratings = [ str(rec[2]) for rec in recommendations_doc['recommendations'] ]
         except KeyError:
-            raise RecommendationsNotGeneratedForUserException
+
+            Vt = Recommendation.Vt
+
+            # TODO set to the number of products
+            full_u = np.zeros(3706)
+
+            # TODO populate full_u with user ratings, e.g.
+            full_u[1] = 5 # user has rated product_id:1 = 5
+
+            recommendations = full_u*Vt*Vt.T
+
+            ratings = np.sort(recommendations)[:,-10:]
+            ratings = [ str(r) for r in ratings ]
+
+            movie_ids = np.where(recommendations >= np.sort(recommendations)[:,-10:].min())[1]
+            movie_ids = [ str(m) for m in movie_ids ]
 
         # get movie names
         keys = urllib.parse.quote_plus(json.dumps(list(movie_ids)))
