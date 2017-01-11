@@ -37,24 +37,6 @@ class CustomJSONEncoder(JSONEncoder):
 app.json_encoder = CustomJSONEncoder
 
 
-def json_numpy_obj_hook(dct):
-    # see http://stackoverflow.com/a/24375113/1033422
-
-    import base64
-    import json
-    import numpy as np
-
-    """Decodes a previously encoded numpy ndarray with proper shape and dtype.
-
-    :param dct: (dict) json encoded ndarray
-    :return: (ndarray) if input was an encoded ndarray
-    """
-    if isinstance(dct, dict) and '__ndarray__' in dct:
-        data = base64.b64decode(dct['__ndarray__'])
-        return np.frombuffer(data, dct['dtype']).reshape(dct['shape'])
-    return dct
-
-
 class RecommendationsNotGeneratedException(Exception):
     pass
 
@@ -62,9 +44,6 @@ class RecommendationsNotGeneratedForUserException(Exception):
     pass
 
 class Recommendation:
-
-    latest_recommendations_db = None
-    Vt = None
 
     def __init__(self, movie_id, movie_name, rating):
         self.movie_id = movie_id
@@ -85,8 +64,50 @@ class Recommendation:
        
         return meta_doc['timestamp']
 
+
+    @staticmethod
+    def get_realtime_ratings(meta_doc):
+
+        # get the product features
+        pf_keys = json.loads(
+                        meta_doc.get_attachment('product_feature_keys', attachment_type='text')
+                        )
+
+        pf_vals = json.loads(
+                        meta_doc.get_attachment('product_feature_vals', attachment_type='text')
+                        )
+
+        Vt = np.matrix(np.asarray(pf_vals))
+
+        full_u = np.zeros(len(pf_keys))
+
+        def set_rating(pf_keys, full_u, key, val):
+            try:
+                full_u[pf_keys.index(key)] = val
+            except:
+                pass
+
+        # TODO iterate through movies user has rated
+        # E.g. Movie.get_ratings(user_id)
+
+        set_rating(pf_keys, full_u, 260, 9),   # Star Wars (1977)
+        set_rating(pf_keys, full_u, 1,   8),   # Toy Story (1995)
+
+        recommendations = full_u*Vt*Vt.T
+
+        ratings = list(np.sort(recommendations)[:,-10:].flat)
+        ratings = [ str(r) for r in ratings ]
+
+        movie_ids = np.where(recommendations >= np.sort(recommendations)[:,-10:].min())[1]
+        movie_ids = [ str(m) for m in movie_ids ]
+
+        return (ratings, movie_ids)
+
+
     @staticmethod
     def get_recommendations(user_id):
+
+        recommendation_type = "batch"
 
         if not current_user.is_authenticated:
             return []
@@ -102,15 +123,6 @@ class Recommendation:
        
         # get name of db for latest recommendations
         latest_recommendations_db = meta_doc['latest_db']
-
-        if not Recommendation.latest_recommendations_db or \
-           Recommendation.latest_recommendations_db < latest_recommendations_db:
-
-            Recommendation.latest_recommendations_db = latest_recommendations_db
-
-            vtdata = meta_doc.get_attachment('vtdata', attachment_type='text')
-            Vt = json.loads(vtdata, object_hook=json_numpy_obj_hook)
-            Recommendation.Vt = Vt
   
         try:
             recommendations_db = cloudant_client[latest_recommendations_db]
@@ -127,23 +139,10 @@ class Recommendation:
             recommendations_doc = recommendations_db[user_id]
             movie_ids = [ str(rec[1]) for rec in recommendations_doc['recommendations'] ]
             ratings = [ str(rec[2]) for rec in recommendations_doc['recommendations'] ]
+
         except KeyError:
-
-            Vt = Recommendation.Vt
-
-            # TODO set to the number of products
-            full_u = np.zeros(3706)
-
-            # TODO populate full_u with user ratings, e.g.
-            full_u[1] = 5 # user has rated product_id:1 = 5
-
-            recommendations = full_u*Vt*Vt.T
-
-            ratings = np.sort(recommendations)[:,-10:]
-            ratings = [ str(r) for r in ratings ]
-
-            movie_ids = np.where(recommendations >= np.sort(recommendations)[:,-10:].min())[1]
-            movie_ids = [ str(m) for m in movie_ids ]
+            recommendation_type = "realtime"
+            ( ratings, movie_ids ) = Recommendation.get_realtime_ratings(meta_doc)
 
         # get movie names
         keys = urllib.parse.quote_plus(json.dumps(list(movie_ids)))
@@ -162,7 +161,7 @@ class Recommendation:
                     recommendation = Recommendation(movie_id, movie_name, rating)
                     recommendations.append(recommendation)
 
-        return recommendations
+        return (recommendation_type, recommendations)
 
 
     def as_dict(self):
