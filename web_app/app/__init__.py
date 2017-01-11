@@ -3,9 +3,12 @@ from flask.ext.bootstrap import Bootstrap
 from flask.ext.moment import Moment
 from flask_sslify import SSLify
 from flask_login import LoginManager
+from flask_moment import Moment
+
 
 app = Flask(__name__)
 sslify = SSLify(app)
+moment = Moment(app)
 
 app.config.from_object('config.Config')
 

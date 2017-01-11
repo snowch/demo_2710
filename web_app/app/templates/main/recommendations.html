@@ -32,17 +32,21 @@
 
     {% endif %}
 
+<hr/>
+<div>
+    <p class="text-center">
+    Recommendations are provided by spark (IBM Spark as a Service) and are scheduled to run every hour</p>
+    <p class="text-center">
+    Last run on: <font color="red">{{ moment(timestamp).format('MMMM Do YYYY, h:mm:ss a') }} ({{ moment(timestamp).fromNow() }})</font></p>
+
+    <hr/>
+</div>
+
 {% else %}
     <b><a href="{{ url_for('auth.login') }}">Login</a> to get Movie recommendations...</b>
 {% endif %}
 </div>
 
-<hr/>
 
-<div>
-    <p>Recommendations are provided by spark (IBM Spark as a Service) and are scheduled to run every hour - last run on: <font color="red">{{ timestamp }}</font>
-
-    <hr/>
-</div>
 
 {% endblock %}

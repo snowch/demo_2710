@@ -9,6 +9,9 @@
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
+{{ moment.include_jquery() }}
+{{ moment.include_moment() }}
+
 {% endblock %}
 
 {% block navbar %}

@@ -61,9 +61,11 @@ class Recommendation:
         if not meta_doc.exists():
             print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
             raise RecommendationsNotGeneratedException
-       
-        return meta_doc['timestamp']
+      
+        timestamp_str = meta_doc['timestamp_utc']
 
+        import dateutil.parser
+        return dateutil.parser.parse(timestamp_str)
 
     @staticmethod
     def get_realtime_ratings(meta_doc):
