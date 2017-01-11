@@ -68,7 +68,7 @@ class Recommendation:
         return dateutil.parser.parse(timestamp_str)
 
     @staticmethod
-    def get_realtime_ratings(meta_doc):
+    def get_realtime_ratings(user_id, meta_doc):
 
         # get the product features
         pf_keys = json.loads(
@@ -85,15 +85,14 @@ class Recommendation:
 
         def set_rating(pf_keys, full_u, key, val):
             try:
-                full_u[pf_keys.index(key)] = val
+                idx = pf_keys.index(key)
+                full_u.itemset(idx, val)
             except:
-                pass
+                import sys
+                print("Unexpected error:", sys.exc_info()[0])
 
-        # TODO iterate through movies user has rated
-        # E.g. Movie.get_ratings(user_id)
-
-        set_rating(pf_keys, full_u, 260, 9),   # Star Wars (1977)
-        set_rating(pf_keys, full_u, 1,   8),   # Toy Story (1995)
+        for key, value in Movie.get_ratings(user_id).items():
+            set_rating(pf_keys, full_u, key, value)
 
         recommendations = full_u*Vt*Vt.T
 
@@ -147,7 +146,7 @@ class Recommendation:
 
         except KeyError:
             recommendation_type = "realtime"
-            ( ratings, movie_ids ) = Recommendation.get_realtime_ratings(meta_doc)
+            ( ratings, movie_ids ) = Recommendation.get_realtime_ratings(user_id, meta_doc)
 
         # get movie names
         keys = urllib.parse.quote_plus(json.dumps(list(movie_ids)))
@@ -189,6 +188,27 @@ class Movie:
                     name = self.name,
                     rating = self.rating
                 )
+
+    @staticmethod
+    def get_ratings(user_id):
+        db = cloudant_client[CL_RATINGDB]
+
+        end_point = "{0}/{1}/_all_docs?start_key=%22user_{2}%22&end_key=%22user_{2}%2Fufff0%22&include_docs=true".format( CL_URL, CL_RATINGDB, user_id )
+
+        headers = { "Content-Type": "application/json" }
+        response = cloudant_client.r_session.get(end_point, headers=headers)
+
+        ratings = {}
+
+        user_ratings = json.loads(response.text)
+        if 'rows' in user_ratings:
+            for row in user_ratings['rows']:
+                movie_id = int(row['doc']['_id'].split('/')[1].split('_')[1])
+                rating = float(row['doc']['rating'])
+
+                ratings[movie_id] = rating
+
+        return ratings
 
     @staticmethod
     def save_rating(movie_id, user_id, rating):
