@@ -8,9 +8,6 @@
 <div>
 {% if current_user.is_authenticated %}
 
-
-    {% if recommendations %}
-
 <div>
     <p>Recommendations are provided by IBM's Data Science Experience (DSX) using Apache Spark as a Service. Recommendations are scheduled to run every hour and are saved to Cloudant NoSQL DB. If you have rated some movies prior to the spark job, recommendations will be generated using Apache Spark machine learning (ALS).  This is 'batch' mode.</p>
     <p>If you have rated some movies you should also be presented with recommendations prior to the hourly batch run.  Recommendations generated this way are called 'realtime' and use the model from the previous batch run, updating it with your ratings. For more information on the approach used, see <a href="http://stackoverflow.com/questions/41537470/als-model-how-to-generate-full-u-vt-v?noredirect=1&lq=1">here</a>.
@@ -18,6 +15,9 @@
 </div>
 
 <hr>
+
+    {% if recommendations %}
+
 
     <table class="table table-striped">
       <thead>
@@ -38,15 +38,16 @@
       </tbody>
     </table>
 
-    {% endif %}
-
-<hr/>
+    <hr/>
 <div>
     <p class="text-center">
     DSX job last run on: <font color="red">{{ moment(timestamp).format('MMMM Do YYYY, h:mm:ss a') }} ({{ moment(timestamp).fromNow() }})</font></p>
 
     <hr/>
 </div>
+
+    {% endif %}
+
 
 {% else %}
     <b><a href="{{ url_for('auth.login') }}">Login</a> to get Movie recommendations...</b>

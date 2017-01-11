@@ -32,6 +32,12 @@ def index():
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
 
+    rated_movies = Movie.get_ratings(current_user.get_id())
+
+    if len(rated_movies.keys()) == 0 and current_user.get_id():
+        flash('No Recommendations found for user, please rate some movies.') 
+        return render_template('/main/recommendations.html', recommendations=[], timestamp=None)
+
     try:
         timestamp = Recommendation.get_latest_recommendation_timestamp()
         (recommendation_type, recommendations) = \
