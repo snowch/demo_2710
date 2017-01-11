@@ -12,6 +12,13 @@
 {{ moment.include_jquery() }}
 {{ moment.include_moment() }}
 
+<style>
+.main-body {
+    /* prevent body siting under footer */
+    margin-bottom:55px;
+}
+</style>
+
 {% endblock %}
 
 {% block navbar %}
@@ -83,7 +90,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container main-body">
     {% for message in get_flashed_messages() %}
     <div class="alert alert-warning">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
