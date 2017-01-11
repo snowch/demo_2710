@@ -44,7 +44,9 @@ def recommendations():
         flash('No Recommendations found for user, please rate some movies and wait for the next recommendation process to run.') 
         return render_template('/main/recommendations.html', recommendations=[], timestamp=timestamp)
 
-    flash("Recommendation type: " + recommendation_type)
+    if recommendation_type:
+        flash("Recommendation type: " + recommendation_type)
+
     return render_template('/main/recommendations.html', recommendations=recommendations, timestamp=timestamp)
 
 @main.route('/set_search_string', methods=['POST'])

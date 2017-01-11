@@ -107,10 +107,11 @@ class Recommendation:
     @staticmethod
     def get_recommendations(user_id):
 
-        recommendation_type = "batch"
+        recommendation_type = None
 
         if not current_user.is_authenticated:
-            return []
+            return (recommendation_type, [])
+
 
         meta_db = cloudant_client[CL_RECOMMENDDB]
 
@@ -139,6 +140,8 @@ class Recommendation:
             recommendations_doc = recommendations_db[user_id]
             movie_ids = [ str(rec[1]) for rec in recommendations_doc['recommendations'] ]
             ratings = [ str(rec[2]) for rec in recommendations_doc['recommendations'] ]
+
+            recommendation_type = "batch"
 
         except KeyError:
             recommendation_type = "realtime"
