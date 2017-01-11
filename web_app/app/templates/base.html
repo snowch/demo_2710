@@ -8,12 +8,12 @@
 
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+<link href="{{ url_for('static', filename='sticky-footer-navbar.css') }}" rel="stylesheet">
+
 {% endblock %}
 
 {% block navbar %}
-<div align="center">
-   <em>NOTE:</em> This demo is periodically refreshed - any data you enter will be deleted.
-</div>
 
 <div class="navbar navbar-inverse" role="navigation">
     <div class="container">
@@ -65,6 +65,20 @@
     </div>
 </div>
 
+<nav class="navbar navbar-default navbar-fixed-bottom">
+  <div class="container">
+    <div class="col-sm-12 text-center navbar-text">
+        <p class="text-muted">
+            <b>NOTE:</b> This demo is periodically refreshed - any data you enter will be deleted.
+            <br>
+            {% if current_user.is_authenticated %}
+            You are currently logged in as: {{ current_user.email }}
+            {% endif %}
+        </p>
+    </div>
+  </div>
+</nav>
+
 {% endblock %}
 
 {% block content %}
@@ -79,6 +93,7 @@
     {% block page_content %}{% endblock %}
 </div>
 {% endblock %}
+
 
 {% block scripts %}
 {{ super() }}
