@@ -72,9 +72,11 @@ cf push
 
  - create an account in the webapp
  - rate some movies
- - create a new DSX project, then 
+ - create a new DSX project, then
+   - upload the Install spark-cloudant 1.6.4 lib.ipynb notebook
+   - run the Install spark-cloudant 1.6.4 lib.ipynb notebook 
    - upload the Cloudant+Recommender+Pyspark.ipynb notebook
-   - follow the instructions to setup the cloudant_credentials.json file
+   - follow the instructions in the notebook to setup the cloudant_credentials.json file
    - click: Cell -> run all
  - when finished, navigate back to the web application and click on 'Get Recommendations'
  - if recommendations were generated without error:
