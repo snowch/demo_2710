@@ -14,6 +14,9 @@ from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
 import collections
 import numpy as np
+from .dao import DAO
+
+
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -100,7 +103,7 @@ class Recommendation:
         ratings = [ str(r) for r in ratings ]
 
         movie_ids = np.where(recommendations >= np.sort(recommendations)[:,-10:].min())[1]
-        movie_ids = [ str(m) for m in movie_ids ]
+        movie_ids = [ int(m) for m in movie_ids ]
 
         return (ratings, movie_ids)
 
@@ -139,7 +142,7 @@ class Recommendation:
         # get recommendations for user
         try:
             recommendations_doc = recommendations_db[user_id]
-            movie_ids = [ str(rec[1]) for rec in recommendations_doc['recommendations'] ]
+            movie_ids = [ int(rec[1]) for rec in recommendations_doc['recommendations'] ]
             ratings = [ str(rec[2]) for rec in recommendations_doc['recommendations'] ]
 
             recommendation_type = "batch"
@@ -148,22 +151,12 @@ class Recommendation:
             recommendation_type = "realtime"
             ( ratings, movie_ids ) = Recommendation.get_realtime_ratings(user_id, meta_doc)
 
-        # get movie names
-        keys = urllib.parse.quote_plus(json.dumps(list(movie_ids)))
-        end_point = '{0}/{1}/_all_docs?keys={2}&include_docs=true'.format ( CL_URL, CL_MOVIEDB, keys)
-        response = cloudant_client.r_session.get(end_point)
-        movie_data = json.loads(response.text)
-
+        # we have the movie_ids, let's get the movie names
         recommendations = []
-
-        if 'rows' in movie_data:
-            for row in movie_data['rows']:
-                if 'doc' in row:
-                    movie_id   = row['key']
-                    movie_name = row['doc']['name']
-                    rating = ratings[movie_ids.index(movie_id)]
-                    recommendation = Recommendation(movie_id, movie_name, rating)
-                    recommendations.append(recommendation)
+        for movie_id, movie_name in DAO.get_movie_names(movie_ids).items():
+            rating = ratings[movie_ids.index(movie_id)]
+            recommendation = Recommendation(movie_id, movie_name, rating)
+            recommendations.append(recommendation)
 
         return (recommendation_type, recommendations)
 

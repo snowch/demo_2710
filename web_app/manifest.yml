@@ -1,6 +1,6 @@
 applications:
-- name: movie-recommend-demo
-  host: movie-recommend-demo
+- name: movie-recommend-demo2
+  host: movie-recommend-demo2
   memory: 128M
   instances: 1
   path: .

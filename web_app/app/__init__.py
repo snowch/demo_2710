@@ -18,6 +18,7 @@ login_manager.init_app(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 
+from . import dao
 from . import models
 from . import views
 from . import main

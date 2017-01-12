@@ -5,7 +5,7 @@ export VCAP_SERVICES="{$(cat etc/cloudant_vcap.json),$(cat etc/redis_vcap.json)}
 
 if [ $# -eq 0 ]
 then
-    python manage.py runserver -d
+    python3.5 manage.py runserver -d
 fi
 
-python manage.py "$@"
+python3.5 manage.py "$@"

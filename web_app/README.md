@@ -1,6 +1,6 @@
 ### Setup
 
-My local environment is python-3.4.3.  Other python versions may not work.
+My local environment is python-3.5.0.  Older python versions will not work.
 
 Setup the source code
 
