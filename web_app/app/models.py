@@ -56,15 +56,17 @@ class Recommendation:
     @staticmethod
     def get_latest_recommendation_timestamp():
 
-        meta_db = cloudant_client[CL_RECOMMENDDB]
 
         # get recommendation_metadata document with last run details
-        meta_doc = meta_db['recommendation_metadata']
-        meta_doc.fetch()
-        if not meta_doc.exists():
+        try:
+            meta_db = cloudant_client[CL_RECOMMENDDB]
+            meta_doc = meta_db['recommendation_metadata']
+            meta_doc.fetch()
+          
+        except KeyError:
             print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
             raise RecommendationsNotGeneratedException
-      
+
         timestamp_str = meta_doc['timestamp_utc']
 
         import dateutil.parser
@@ -116,26 +118,20 @@ class Recommendation:
         if not current_user.is_authenticated:
             return (recommendation_type, [])
 
-
-        meta_db = cloudant_client[CL_RECOMMENDDB]
-
         # get recommendation_metadata document with last run details
-        meta_doc = meta_db['recommendation_metadata']
-        meta_doc.fetch()
-        if not meta_doc.exists():
+        try:
+            meta_db = cloudant_client[CL_RECOMMENDDB]
+            meta_doc = meta_db['recommendation_metadata']
+            meta_doc.fetch()
+        except KeyError:
             print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
             raise RecommendationsNotGeneratedException
        
         # get name of db for latest recommendations
-        latest_recommendations_db = meta_doc['latest_db']
-  
         try:
+            latest_recommendations_db = meta_doc['latest_db']
             recommendations_db = cloudant_client[latest_recommendations_db]
-            if not recommendations_db.exists():
-                print('recommendationsdb not found', latest_recommendations_db)
-                raise RecommendationsNotGeneratedException
         except KeyError:
-            # FIXME - we shouldn't need to do exists() and handle KeyError
             print('recommendationsdb not found', latest_recommendations_db)
             raise RecommendationsNotGeneratedException
 
