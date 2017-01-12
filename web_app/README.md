@@ -1,6 +1,9 @@
 ### Setup
 
-My local environment is python-3.5.0.  Older python versions will not work.
+#### Prerequisites
+
+- Cloud Foundry CLI installed: https://console.ng.bluemix.net/docs/starters/install_cli.html
+- Local python version must be 3.5.x.  Older python versions will not work.
 
 #### Setup the source code
 
@@ -41,7 +44,18 @@ pip3.5 install -r requirements.txt
 Then run
 
 ```
+# When you login, you will be prompted to select the space and org.
+# ensure you choose the space/org where you created your Cloudant 
+# service and Redis service 
+
 cf login ...
+
+# verify that cf is pointing at the right space/org
+
+cf target
+
+# you can now push the web app to Bluemix
+
 cf push
 ```
 

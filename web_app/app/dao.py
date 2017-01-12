@@ -34,7 +34,7 @@ class DAO:
         # for querying
         movie_ids = [ str(id) for id in movie_ids ]
 
-        keys = urllib.parse.quote_plus(json.dumps(list(movie_ids)))
+        keys = urllib.parse.quote_plus(json.dumps(movie_ids))
 
         # The movie id is stored in the _id field, so we query it using the 'keys' parameter
         end_point = '{0}/{1}/_all_docs?keys={2}&include_docs=true'.format ( 
