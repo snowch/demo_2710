@@ -4,6 +4,7 @@
 
 - Cloud Foundry CLI installed: https://console.ng.bluemix.net/docs/starters/install_cli.html
 - Local python version must be 3.5.x.  Older python versions will not work.
+- Linux/OS X are recommended for your local development environment.
 
 #### Setup the source code
 
@@ -33,6 +34,14 @@ pip3.5 install -r requirements.txt
 ./run.sh
 ```
 
+You should see a URL output:
+
+```
+ * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+```
+
+Open this to try out the webapp locally.
+
 ### Push to bluemix
 
  - edit manifest.yml
@@ -41,7 +50,7 @@ pip3.5 install -r requirements.txt
      - your cloudant service name
      - your redis service name
 
-Then run
+Then run:
 
 ```
 # When you login, you will be prompted to select the space and org.
@@ -68,6 +77,9 @@ cf push
    - follow the instructions to setup the cloudant_credentials.json file
    - click: Cell -> run all
  - when finished, navigate back to the web application and click on 'Get Recommendations'
+ - if recommendations were generated without error:
+    - save a new version of the notebook: File -> Save Version
+    - setup a DSX schedule job to run the version every hour
 
 ### Developing
 
