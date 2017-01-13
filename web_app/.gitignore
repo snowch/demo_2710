@@ -12,3 +12,4 @@ redis_vcap.json
 cloudant_vcap.json
 messagehub_vcap.json
 biginsight_credentials.json
+venv/pip-selfcheck.json

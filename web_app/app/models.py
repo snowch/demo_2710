@@ -14,9 +14,7 @@ from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
 import collections
 import numpy as np
-from .dao import MovieDAO, RatingDAO
-
-
+from .dao import MovieDAO, RatingDAO, RecommendationDAO, UserDAO
 
 
 RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
@@ -54,22 +52,7 @@ class Recommendation:
 
     @staticmethod
     def get_latest_recommendation_timestamp():
-
-
-        # get recommendation_metadata document with last run details
-        try:
-            meta_db = cloudant_client[CL_RECOMMENDDB]
-            meta_doc = meta_db['recommendation_metadata']
-            meta_doc.fetch()
-          
-        except KeyError:
-            print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
-            raise RecommendationsNotGeneratedException
-
-        timestamp_str = meta_doc['timestamp_utc']
-
-        import dateutil.parser
-        return dateutil.parser.parse(timestamp_str)
+        return RecommendationDAO.get_latest_recommendation_timestamp()
 
     @staticmethod
     def get_realtime_ratings(user_id, meta_doc):
@@ -385,19 +368,14 @@ login_manager.anonymous_user = AnonymousUser
 @login_manager.user_loader
 def load_user(user_id):
 
-    # TODO put this cloudant lookup code into a utility method
-
-    auth_db = cloudant_client[CL_AUTHDB]
-    end_point = '{0}/{1}/{2}'.format ( CL_URL, CL_AUTHDB, user_id )
-    response = cloudant_client.r_session.get(end_point)
-
-    if response.status_code == 200:
-        doc = response.json()
-        email = doc['email']
-        password_hash = doc['password_hash']
-        user = User(user_id, email, password_hash=password_hash)
-        return user
-    return None
-
-
+    user_dict = UserDAO.load_user(user_id)
+    
+    if user_dict:
+        return User(
+                    user_id,
+                    user_dict['email'],
+                    user_dict['password_hash']
+                )
+    else:
+        return None
 

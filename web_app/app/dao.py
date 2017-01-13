@@ -8,6 +8,7 @@ from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
 from typing import List, Dict, Optional
 from cloudant.document import Document
+from cloudant.database import CloudantDatabase
 
 
 RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
@@ -71,8 +72,6 @@ class RatingDAO:
                               by the user.
         """
 
-        db = cloudant_client[CL_RATINGDB]
-
         # The rating document _id format is: user_n/movie_n
 
         template = "{0}/{1}/_all_docs?" + \
@@ -113,9 +112,9 @@ class RatingDAO:
            - If the rating does exist in the database it will be deleted
         """
         
-        current_milli_time = lambda: int(round(time.time() * 1000))
-
         db = cloudant_client[CL_RATINGDB]
+
+        current_milli_time = lambda: int(round(time.time() * 1000))
 
         id = 'user_{0}/movie_{1}'.format(user_id, movie_id)
 
@@ -128,3 +127,48 @@ class RatingDAO:
                     document.update( { '_deleted': True } )
                     print('deleted rating', id)
 
+
+class RecommendationDAO:
+
+    @staticmethod
+    def get_latest_recommendation_timestamp() -> datetime:
+        """Get the timestamp that the latest recommendations were generated
+
+        Returns:
+            datetime: Returns the UTC timestamp
+        """
+
+        db = cloudant_client[CL_RECOMMENDDB]
+
+        # get recommendation_metadata document with last run details
+        try:
+            doc = db['recommendation_metadata']
+            doc.fetch()
+          
+        except KeyError:
+            print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
+            raise RecommendationsNotGeneratedException
+
+        timestamp_str = doc['timestamp_utc']
+
+        import dateutil.parser
+        return dateutil.parser.parse(timestamp_str)
+   
+class UserDAO:
+
+    @staticmethod
+    def load_user(user_id: str) -> Dict[str, str]:
+
+        endpoint = '{0}/{1}/{2}'.format ( CL_URL, CL_AUTHDB, user_id )
+        response = cloudant_client.r_session.get(endpoint)
+
+        user_dict = {}
+
+        if response.status_code == 200:
+            doc = response.json()
+            user_dict['email'] = doc['email']
+            user_dict['password_hash'] = doc['password_hash']
+
+        return user_dict
+
+    
