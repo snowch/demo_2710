@@ -240,6 +240,10 @@ class RecommendationDAO:
         # get recommendations for user
         try:
             recommendations_doc = recommendations_db[user_id]
+
+            # If the above ran without KeyError, recommendations were generated
+            # when the ALS model was trained and the recommendations were saved
+            # to Cloudant
            
             recommendations = {}
             for rec in recommendations_doc['recommendations']: 
@@ -251,6 +255,9 @@ class RecommendationDAO:
                      'recommendations' : recommendations }
 
         except KeyError:
+
+            # no recommendations were generated for the user - they probably hadn't 
+            # rated any movies by the time the ALS model was trained
 
             pf_keys = json.loads(
                 meta_doc.get_attachment('product_feature_keys', attachment_type='text')
