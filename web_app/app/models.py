@@ -44,6 +44,9 @@ class Recommendation:
     @staticmethod
     def calculate_ratings(user_id, pf_keys, pf_vals):
 
+        # See here for the rationale behind this approach:
+        # http://stackoverflow.com/questions/41537470/als-model-how-to-generate-full-u-vt-v
+
         Vt = np.matrix(np.asarray(pf_vals))
 
         full_u = np.zeros(len(pf_keys))
