@@ -19,6 +19,7 @@
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>Movie ID</th>
                 <th>Name</th>
                 {% if current_user.is_authenticated %}
                 <th>Your Rating</th>
@@ -28,6 +29,7 @@
         <tbody>
             {% for movie in movies %}
             <tr>
+                <td>{{ movie.movie_id }}</td>
                 <td>{{ movie.name }}</td>
                 {% if current_user.is_authenticated %}
                 <td>

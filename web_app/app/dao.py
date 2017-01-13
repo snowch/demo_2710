@@ -58,14 +58,49 @@ class MovieDAO:
 
         return movie_names
 
+    @staticmethod
+    def find_movies(search_string: str) -> Dict[int, str]:
+        """Find movies in Cloudant database.
+
+        Args:
+            search_string (str): Search string for movie.
+
+        Returns:
+            Dict[int, str]: Returns a dict with { movie_id: movie_name, ... }.
+                            An empty dict will be returned if no movies are found.
+        """
+
+        movie_db = cloudant_client[CL_MOVIEDB]
+        index_name = 'movie-search-index'
+
+        end_point = '{0}/{1}/_design/{2}/_search/{2}'.format ( CL_URL, CL_MOVIEDB, index_name )
+        data = {
+            "q": "name:" + search_string,
+            "limit": 25
+        }
+        headers = { "Content-Type": "application/json" }
+        response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
+
+        movies = {}
+        movie_data = json.loads(response.text)
+        if 'rows' in movie_data:
+            for row in movie_data['rows']:
+                movie_id = row['id']
+                movie_name = row['fields']['name']
+                movies[movie_id] = movie_name
+       
+        return movies
+
 class RatingDAO:
 
     @staticmethod
-    def get_ratings(user_id: int) -> Dict[int, float]:
+    def get_ratings(user_id: int, movie_ids: List[int] = None) -> Dict[int, float]:
         """Retrieve user's rated movies.
 
         Args:
-            user_id (int): The user_id whose movie ratings you require. 
+            user_id         (int): The user_id whose movie ratings you require. 
+            movie_ids (List[int]): If a list of movie_ids is provided, only return a rating
+                                   if it is for a movie in this list.
 
         Returns:
             Dict[int, float]: Returns a dict with { movie_id: rating, ... }.
@@ -85,9 +120,13 @@ class RatingDAO:
         ratings = {}
         if 'rows' in user_ratings:
             for row in user_ratings['rows']:
+
                 movie_id = int(row['doc']['_id'].split('/')[1].split('_')[1])
                 rating = float(row['doc']['rating'])
-                ratings[movie_id] = rating
+
+                # if movie_ids filter was provided only return the rating if it is in the list
+                if movie_ids and movie_id in movie_ids:
+                    ratings[movie_id] = rating
 
         return ratings
 

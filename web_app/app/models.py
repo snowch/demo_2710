@@ -166,44 +166,39 @@ class Movie:
                     name = self.name,
                     rating = self.rating
                 )
+    
+    def __repr__(self):
+        return str(self.as_dict())
 
     @staticmethod
-    def find_movies(search_string):
+    def find_movies(user_id, search_string):
 
-        movie_db = cloudant_client[CL_MOVIEDB]
-        index_name = 'movie-search-index'
+        movies_dict = MovieDAO.find_movies(search_string)
 
-        end_point = '{0}/{1}/_design/{2}/_search/{2}'.format ( CL_URL, CL_MOVIEDB, index_name )
-        data = {
-            "q": "name:" + search_string,
-            "limit": 25
-        }
-        headers = { "Content-Type": "application/json" }
-        response = cloudant_client.r_session.post(end_point, data=json.dumps(data), headers=headers)
-        movie_data = json.loads(response.text)
-        if 'rows' in movie_data:
-            movies = {}
-            rating_ids = []
+        # the DAO expects movie_ids to be integers
+        movie_ids = [ int(m) for m in list(movies_dict.keys()) ]
 
-            for row in movie_data['rows']:
-                movie_user_key = "user_{0}/movie_{1}".format(current_user.get_id(), row['id'])
+        # we need to also get the user ratings
+        movie_ratings = RatingDAO.get_ratings(user_id, movie_ids)
 
-                movies[movie_user_key] = Movie(row['id'], row['fields']['name'])
-                if current_user.get_id():
-                    rating_ids.append(movie_user_key)
+        # we need to get the user's rating for the movie if available
+        movies = []
+        for movie_id, movie_name in movies_dict.items():
 
-        keys = urllib.parse.quote_plus(json.dumps(rating_ids))
-        end_point = '{0}/{1}/_all_docs?keys={2}&include_docs=true'.format ( CL_URL, CL_RATINGDB, keys)
-        response = cloudant_client.r_session.get(end_point)
-        rating_data = json.loads(response.text)
+            movie_id = int(movie_id)
 
-        if 'rows' in rating_data:
-            for row in rating_data['rows']:
-                if 'doc' in row:
-                    if row['doc'] and 'rating' in row['doc']:
-                        movies[row['key']].rating = row['doc']['rating']
+            movie = Movie(
+                        movie_id,
+                        movie_name,
+                        )
 
-        return [ v for k,v in movies.items()]
+            # the user rated this movie
+            if movie_id in movie_ratings:
+                movie.rating = movie_ratings[movie_id]
+
+            movies.append(movie)
+
+        return movies
 
 
 class User(UserMixin):

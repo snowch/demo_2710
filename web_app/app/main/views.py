@@ -22,7 +22,10 @@ def index():
 
     search_string = session.get('search_string') 
     if search_string:
-        session['movies'] = Movie.find_movies(session.get('search_string'))
+        session['movies'] = Movie.find_movies(
+                                        current_user.get_id(),
+                                        session.get('search_string')
+                                        )
     else:
         session['movies'] = []
 
