@@ -11,41 +11,41 @@
     <b>Movie Search Results.</b>
 
     {% if current_user.is_authenticated %}
-    <hr>
-    Movie ratings are from <b>1</b> (worst) to <b>5</b> (best).
-    <hr>
+        <hr>
+            Movie ratings are from <b>1</b> (worst) to <b>5</b> (best).
+        <hr>
     {% endif %}
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Name</th>
-      {% if current_user.is_authenticated %}
-      <th>Your Rating</th>
-      {% endif %}
-    </tr>
-  </thead>
-  <tbody>
-  {% for movie in movies %}
-  <tr>
-      <td>{{ movie.name }}</td>
-      {% if current_user.is_authenticated %}
-      <td>
-          <!-- TODO: crsf protection -->
-          <select id="{{ movie.movie_id }}" data-userid="{{ current_user.get_id() }}" class="rating-selector">
-            <option value="-" {% if movie.rating == None %}selected="selected"{% endif %}>-</option>
-            <option value="1" {% if movie.rating == 1 %}selected="selected"{% endif %}>1</option>
-            <option value="2" {% if movie.rating == 2 %}selected="selected"{% endif %}>2</option>
-            <option value="3" {% if movie.rating == 3 %}selected="selected"{% endif %}>3</option>
-            <option value="4" {% if movie.rating == 4 %}selected="selected"{% endif %}>4</option>
-            <option value="5" {% if movie.rating == 5 %}selected="selected"{% endif %}>5</option>
-          </select> 
-      </td>
-      {% endif %}
-  </tr>
-  {% endfor %}
-  </tbody>
-</table>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                {% if current_user.is_authenticated %}
+                <th>Your Rating</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for movie in movies %}
+            <tr>
+                <td>{{ movie.name }}</td>
+                {% if current_user.is_authenticated %}
+                <td>
+                    <!-- TODO: crsf protection -->
+                    <select id="{{ movie.movie_id }}" data-userid="{{ current_user.get_id() }}" class="rating-selector">
+                        <option value="-" {% if movie.rating == None %}selected="selected"{% endif %}>-</option>
+                        <option value="1" {% if movie.rating == 1 %}selected="selected"{% endif %}>1</option>
+                        <option value="2" {% if movie.rating == 2 %}selected="selected"{% endif %}>2</option>
+                        <option value="3" {% if movie.rating == 3 %}selected="selected"{% endif %}>3</option>
+                        <option value="4" {% if movie.rating == 4 %}selected="selected"{% endif %}>4</option>
+                        <option value="5" {% if movie.rating == 5 %}selected="selected"{% endif %}>5</option>
+                    </select> 
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     {% if not current_user.is_authenticated %}
     <em><b>Note:</b></em> Album ratings are not displayed because you are not logged in. <a href="{{ url_for('auth.login') }}">Login</a> to show your ratings...
@@ -53,9 +53,11 @@
     {% endif %}
 
 {% else %}
-<h2>Overview</h2>
-<p>Welcome to this demo movie recommender application.  This demo has been installed with approximately four thousand movies and one million ratings from the <a href="http://grouplens.org/datasets/movielens/1m/">MovieLens 1M Dataset</a>.  The purpose of this web application is to allow users to search for movies, rate movies, and receive recommendations for movies based on their ratings.
-<p>To get started:
+<!-- there are no movies, so we must be on the welcome screen -->
+
+    <h2>Overview</h2>
+    <p>Welcome to this demo movie recommender application.  This demo has been installed with approximately four thousand movies and one million ratings from the <a href="http://grouplens.org/datasets/movielens/1m/">MovieLens 1M Dataset</a>.  The purpose of this web application is to allow users to search for movies, rate movies, and receive recommendations for movies based on their ratings.
+    <p>To get started:
     <ul>
         <li>Register for an account</li>
         <li>Login to your account</li>
@@ -102,8 +104,6 @@
 {% endif %}
 
 {% endblock %}
-
-
 
 {% block scripts %}
 {{ super() }}

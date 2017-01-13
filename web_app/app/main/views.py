@@ -3,7 +3,8 @@ from flask.ext.login import login_required, current_user
 from . import forms
 from . import main 
 from .. import app
-from ..models import Movie, Recommendation, Rating, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
+from ..models import Movie, Recommendation, Rating
+from ..dao import RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
 
 @main.route('/home', methods=['GET'])
 def home():
@@ -34,6 +35,7 @@ def recommendations():
 
     rated_movies = Rating.get_ratings(current_user.get_id())
 
+    # the user needs to have rated some movies to be able to receive recommendations
     if len(rated_movies.keys()) == 0 and current_user.get_id():
         flash('No Recommendations found for user, please rate some movies.') 
         return render_template('/main/recommendations.html', recommendations=[], timestamp=None)
@@ -47,7 +49,7 @@ def recommendations():
         flash('No recommendations available - the Recommendation process has not run yet.') 
         return render_template('/main/recommendations.html', recommendations=[])
     except RecommendationsNotGeneratedForUserException:
-        flash('No Recommendations found for user, please rate some movies and wait for the next recommendation process to run.') 
+        flash('No Recommendations found for user, please rate some movies.') 
         return render_template('/main/recommendations.html', recommendations=[], timestamp=timestamp)
 
     if recommendation_type:
