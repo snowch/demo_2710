@@ -11,13 +11,10 @@ import time
 import urllib
 from . import app, login_manager
 from app.cloudant_db import cloudant_client
-from app.redis_db import get_next_user_id
 import collections
 import numpy as np
-from .dao import MovieDAO, RatingDAO, RecommendationDAO, UserDAO
+from .dao import MovieDAO, RatingDAO, RecommendationDAO, UserDAO, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
 
-
-RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
 
 CL_URL      = app.config['CL_URL']
 CL_MOVIEDB  = app.config['CL_MOVIEDB']
@@ -36,12 +33,6 @@ class CustomJSONEncoder(JSONEncoder):
 
 app.json_encoder = CustomJSONEncoder
 
-
-class RecommendationsNotGeneratedException(Exception):
-    pass
-
-class RecommendationsNotGeneratedForUserException(Exception):
-    pass
 
 class Recommendation:
 
@@ -74,11 +65,16 @@ class Recommendation:
             try:
                 idx = pf_keys.index(key)
                 full_u.itemset(idx, val)
+            except ValueError:
+                # the movie didn't have any ratings in when the model 
+                # when the product features were create last time the 
+                # model was trained
+                pass
             except:
                 import sys
                 print("Unexpected error:", sys.exc_info()[0])
 
-        for key, value in Movie.get_ratings(user_id).items():
+        for key, value in Rating.get_ratings(user_id).items():
             set_rating(pf_keys, full_u, key, value)
 
         recommendations = full_u*Vt*Vt.T
@@ -122,12 +118,11 @@ class Recommendation:
             recommendations_doc = recommendations_db[user_id]
             movie_ids = [ int(rec[1]) for rec in recommendations_doc['recommendations'] ]
             ratings = [ str(rec[2]) for rec in recommendations_doc['recommendations'] ]
-
             recommendation_type = "batch"
 
         except KeyError:
-            recommendation_type = "realtime"
             ( ratings, movie_ids ) = Recommendation.get_realtime_ratings(user_id, meta_doc)
+            recommendation_type = "realtime"
 
         # we have the movie_ids, let's get the movie names
         recommendations = []
@@ -237,123 +232,37 @@ class User(UserMixin):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def generate_confirmation_token(self, expiration=3600):
-        s = Serializer(app.config['SECRET_KEY'], expiration)
-        return s.dumps({'confirm': self.id})
-
-    def confirm(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('confirm') != self.id:
-            return False
-        self.confirmed = True
-        db.session.add(self)
-        return True
-
-    def generate_reset_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'reset': self.id})
-
-    def reset_password(self, token, new_password):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('reset') != self.id:
-            return False
-        self.password = new_password
-        db.session.add(self)
-        return True
-
-    def generate_email_change_token(self, new_email, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'change_email': self.id, 'new_email': new_email})
-
-    def change_email(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('change_email') != self.id:
-            return False
-        new_email = data.get('new_email')
-        if new_email is None:
-            return False
-        if self.query.filter_by(email=new_email).first() is not None:
-            return False
-        self.email = new_email
-        self.avatar_hash = hashlib.md5(
-            self.email.encode('utf-8')).hexdigest()
-        db.session.add(self)
-        return True
-
-    def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'],
-                       expires_in=expiration)
-        return s.dumps({'id': self.id}).decode('ascii')
-
     @staticmethod
     def email_is_registered(email):
         return User.find_by_email(email) is not None
-
-    @staticmethod
-    def verify_auth_token(token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return None
-        return User.query.get(data['id'])
 
     def __repr__(self):
         return '<User %r>' % self.email
 
     def save(self):
 
-        # TODO put this cloudant lookup code into a utility method
-
-        if self.id == None:
-            self.id = get_next_user_id()
-            data = { 
-                "_id": str(self.id),
-                "email": self.email,
-                "password_hash": self.password_hash
-            }
-            auth_db = cloudant_client[CL_AUTHDB]
-            doc = auth_db.create_document(data)
-
-            if not doc.exists():
-                raise BaseException("Coud not save: " + data)
-        else:
+        if self.id != None:
             raise BaseException("Updating user account is not supported")
+
+        user_id = UserDAO.create_user(
+                                    self.email,
+                                    self.password_hash
+                                    )
+        self.user_id = id
 
     @staticmethod
     def find_by_email(email):
 
-        # TODO put this cloudant lookup code into a utility method
+        user_dict = UserDAO.find_by_email(email)
 
-        auth_db = cloudant_client[CL_AUTHDB]
-        key = urllib.parse.quote_plus(email)
-        view_name = 'authdb-email-index'
-        end_point = '{0}/{1}/_design/{2}/_view/{2}?key="{3}"&include_docs=true'.format ( CL_URL, CL_AUTHDB, view_name, key )
-        response = cloudant_client.r_session.get(end_point)
-
-        if response.status_code == 200:
-            rows = response.json()['rows']
-            if len(rows) > 0:
-                password_hash = rows[0]['doc']['password_hash']
-                id = rows[0]['doc']['_id']
-                user = User(id, email, password_hash=password_hash)
-                return user
-            else:
-                print("user not found for email", email)
-                return None
-        return None
+        if user_dict:
+            return User(
+                        user_dict['user_id'],
+                        email,
+                        password_hash=user_dict['password_hash']
+                    )
+        else:
+            return None
 
 class AnonymousUser(AnonymousUserMixin):
     def can(self, permissions):
@@ -374,7 +283,7 @@ def load_user(user_id):
         return User(
                     user_id,
                     user_dict['email'],
-                    user_dict['password_hash']
+                    password_hash=user_dict['password_hash']
                 )
     else:
         return None

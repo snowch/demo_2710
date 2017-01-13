@@ -10,14 +10,18 @@ from typing import List, Dict, Optional
 from cloudant.document import Document
 from cloudant.database import CloudantDatabase
 
+CL_URL = app.config['CL_URL']
 
-RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
-
-CL_URL      = app.config['CL_URL']
 CL_MOVIEDB  = app.config['CL_MOVIEDB']
 CL_AUTHDB   = app.config['CL_AUTHDB']
 CL_RATINGDB = app.config['CL_RATINGDB']
 CL_RECOMMENDDB = app.config['CL_RECOMMENDDB']
+
+class RecommendationsNotGeneratedException(Exception):
+    pass
+
+class RecommendationsNotGeneratedForUserException(Exception):
+    pass
 
 class MovieDAO:
 
@@ -37,22 +41,19 @@ class MovieDAO:
         # for querying
         movie_ids = [ str(id) for id in movie_ids ]
 
-        keys = urllib.parse.quote_plus(json.dumps(movie_ids))
+        db = cloudant_client[CL_MOVIEDB]
+        args = {
+            "keys"         : movie_ids,
+            "include_docs" : True
+        }
 
-        # The movie id is stored in the _id field, so we query it using the 'keys' parameter
-        template = '{0}/{1}/_all_docs?keys={2}&include_docs=true'
-        endpoint = template.format ( CL_URL, CL_MOVIEDB, keys )
-        response = cloudant_client.r_session.get(endpoint)
-        movie_data = json.loads(response.text)
-
+        movie_data = db.all_docs(**args)
         movie_names = {}
-
         if 'rows' in movie_data:
             for row in movie_data['rows']:
                 if 'doc' in row:
                     movie_id   = int(row['key'])
                     movie_name = row['doc']['name']
-
                     movie_names[movie_id] = movie_name
 
         return movie_names
@@ -72,24 +73,20 @@ class RatingDAO:
                               by the user.
         """
 
-        # The rating document _id format is: user_n/movie_n
+        db = cloudant_client[CL_RATINGDB]
+        args = {
+            "startkey"     : 'user_{0}'.format(user_id),
+            "endkey"       : 'user_{0}/ufff0'.format(user_id),
+            "include_docs" : True
+        }
 
-        template = "{0}/{1}/_all_docs?" + \
-                    "start_key=%22user_{2}%22&end_key=%22user_{2}%2Fufff0%22&" + \
-                    "include_docs=true"
-        endpoint = template.format( CL_URL, CL_RATINGDB, user_id )
-
-        headers = { "Content-Type": "application/json" }
-        response = cloudant_client.r_session.get(endpoint, headers=headers)
+        user_ratings = db.all_docs(**args)
 
         ratings = {}
-
-        user_ratings = json.loads(response.text)
         if 'rows' in user_ratings:
             for row in user_ratings['rows']:
                 movie_id = int(row['doc']['_id'].split('/')[1].split('_')[1])
                 rating = float(row['doc']['rating'])
-
                 ratings[movie_id] = rating
 
         return ratings
@@ -187,4 +184,78 @@ class UserDAO:
 
         return user_dict
 
-    
+    @staticmethod
+    def find_by_email(email: str) -> Dict[str, str]:
+        """Load user details
+
+        Args:
+            email (str): The user email address
+
+        Returns:
+            Dict[str, str]: Returns the user dict with the following fields:
+                            {
+                                'user_id': str
+                                'password_hash': str
+                            }
+        """
+
+        # FIXME - convert this to python-cloudant api
+
+        auth_db = cloudant_client[CL_AUTHDB]
+        key = urllib.parse.quote_plus(email)
+        view_name = 'authdb-email-index'
+
+        template = '{0}/{1}/_design/{2}/_view/{2}?key="{3}"&include_docs=true'
+        endpoint = template.format ( 
+                            CL_URL, 
+                            CL_AUTHDB,
+                            view_name,
+                            key 
+                            )
+
+        response = cloudant_client.r_session.get(endpoint)
+
+        user_dict = {}
+
+        if response.status_code == 200:
+            rows = response.json()['rows']
+            if len(rows) > 0:
+                user_dict['password_hash'] = rows[0]['doc']['password_hash']
+                user_dict['user_id']       = rows[0]['doc']['_id']
+                print("User found for email",  email)
+            else:
+                print("User not found for email", email)
+                
+        return user_dict
+
+    @staticmethod
+    def create_user(email: str, password_hash: str) -> int:
+        """Create new user
+
+        Args:
+            email         (str): The user's email address
+            password_hash (str): The user's password_hash
+
+        Returns:
+            int: The generated user id for the new user
+        """
+
+        db = cloudant_client[CL_AUTHDB]
+
+        # Spark ALS requires user id's to be integers, and because
+        # Cloudant does not have atomic incrementing integer fields,
+        # we use Redis
+
+        from app.redis_db import get_next_user_id
+        id = get_next_user_id()
+
+        data = { 
+            "_id"           : str(id),
+            "email"         : email,
+            "password_hash" : password_hash
+        }
+        doc = db.create_document(data)
+
+        if not doc.exists():
+            raise BaseException("Coud not save user: " + data)
+
