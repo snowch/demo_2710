@@ -3,7 +3,7 @@ from flask.ext.login import login_required, current_user
 from . import forms
 from . import main 
 from .. import app
-from ..models import Movie, Recommendation, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
+from ..models import Movie, Recommendation, Rating, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
 
 @main.route('/home', methods=['GET'])
 def home():
@@ -32,7 +32,7 @@ def index():
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
 
-    rated_movies = Movie.get_ratings(current_user.get_id())
+    rated_movies = Rating.get_ratings(current_user.get_id())
 
     if len(rated_movies.keys()) == 0 and current_user.get_id():
         flash('No Recommendations found for user, please rate some movies.') 
@@ -76,7 +76,8 @@ def set_rating():
     rating   = request.json['rating']
 
     if rating == '-':
-        return('{ "success": "ignored_as_value_not_changed" }')
+        Rating.save_rating(movie_id, user_id, None)
+    else:
+        Rating.save_rating(movie_id, user_id, int(rating))
 
-    Movie.save_rating(movie_id, user_id, int(rating))
     return('{ "success": "true" }')

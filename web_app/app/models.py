@@ -14,11 +14,10 @@ from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
 import collections
 import numpy as np
-from .dao import DAO
+from .dao import MovieDAO, RatingDAO
 
 
 
-current_milli_time = lambda: int(round(time.time() * 1000))
 
 RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
 
@@ -149,7 +148,7 @@ class Recommendation:
 
         # we have the movie_ids, let's get the movie names
         recommendations = []
-        for movie_id, movie_name in DAO.get_movie_names(movie_ids).items():
+        for movie_id, movie_name in MovieDAO.get_movie_names(movie_ids).items():
             rating = ratings[movie_ids.index(movie_id)]
             recommendation = Recommendation(movie_id, movie_name, rating)
             recommendations.append(recommendation)
@@ -162,6 +161,18 @@ class Recommendation:
                     movie_id = self.movie_id,
                     movie_name = self.movie_name,
                     rating = self.rating
+                )
+
+class Rating:
+
+    @staticmethod
+    def get_ratings(user_id):
+        return RatingDAO.get_ratings(int(user_id))
+
+    @staticmethod
+    def save_rating(movie_id, user_id, rating):
+        RatingDAO.save_rating(
+                int(movie_id), int(user_id), rating
                 )
 
 class Movie:
@@ -177,45 +188,6 @@ class Movie:
                     name = self.name,
                     rating = self.rating
                 )
-
-    @staticmethod
-    def get_ratings(user_id):
-        db = cloudant_client[CL_RATINGDB]
-
-        end_point = "{0}/{1}/_all_docs?start_key=%22user_{2}%22&end_key=%22user_{2}%2Fufff0%22&include_docs=true".format( CL_URL, CL_RATINGDB, user_id )
-
-        headers = { "Content-Type": "application/json" }
-        response = cloudant_client.r_session.get(end_point, headers=headers)
-
-        ratings = {}
-
-        user_ratings = json.loads(response.text)
-        if 'rows' in user_ratings:
-            for row in user_ratings['rows']:
-                movie_id = int(row['doc']['_id'].split('/')[1].split('_')[1])
-                rating = float(row['doc']['rating'])
-
-                ratings[movie_id] = rating
-
-        return ratings
-
-    @staticmethod
-    def save_rating(movie_id, user_id, rating):
-        # FIXME: updating a rating currently fails due to MVCC conflict
-        data = {
-            "_id": "user_{0}/movie_{1}".format(user_id, movie_id),
-            "rating": rating,
-            "timestamp": current_milli_time()
-        }
-        response = requests.post(
-                RATINGDB_URL,
-                auth=app.config['CL_AUTH'], 
-                data=json.dumps(data), 
-                headers={'Content-Type':'application/json'})
-
-        # print(response.text)
-        # TODO check response
-        response.raise_for_status()
 
     @staticmethod
     def find_movies(search_string):
@@ -250,7 +222,8 @@ class Movie:
         if 'rows' in rating_data:
             for row in rating_data['rows']:
                 if 'doc' in row:
-                    movies[row['key']].rating = row['doc']['rating']
+                    if row['doc'] and 'rating' in row['doc']:
+                        movies[row['key']].rating = row['doc']['rating']
 
         return [ v for k,v in movies.items()]
 
