@@ -39,10 +39,9 @@ class MovieDAO:
         keys = urllib.parse.quote_plus(json.dumps(movie_ids))
 
         # The movie id is stored in the _id field, so we query it using the 'keys' parameter
-        end_point = '{0}/{1}/_all_docs?keys={2}&include_docs=true'.format ( 
-                                                                CL_URL, CL_MOVIEDB, keys
-                                                                )
-        response = cloudant_client.r_session.get(end_point)
+        template = '{0}/{1}/_all_docs?keys={2}&include_docs=true'
+        endpoint = template.format ( CL_URL, CL_MOVIEDB, keys )
+        response = cloudant_client.r_session.get(endpoint)
         movie_data = json.loads(response.text)
 
         movie_names = {}
@@ -76,14 +75,13 @@ class RatingDAO:
 
         # The rating document _id format is: user_n/movie_n
 
-        end_point = "{0}/{1}/_all_docs?" + \
+        template = "{0}/{1}/_all_docs?" + \
                     "start_key=%22user_{2}%22&end_key=%22user_{2}%2Fufff0%22&" + \
-                    "include_docs=true".format( 
-                                            CL_URL, CL_RATINGDB, user_id 
-                                            )
+                    "include_docs=true"
+        endpoint = template.format( CL_URL, CL_RATINGDB, user_id )
 
         headers = { "Content-Type": "application/json" }
-        response = cloudant_client.r_session.get(end_point, headers=headers)
+        response = cloudant_client.r_session.get(endpoint, headers=headers)
 
         ratings = {}
 
