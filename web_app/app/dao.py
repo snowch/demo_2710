@@ -158,16 +158,32 @@ class UserDAO:
 
     @staticmethod
     def load_user(user_id: str) -> Dict[str, str]:
+        """Load user details
 
-        endpoint = '{0}/{1}/{2}'.format ( CL_URL, CL_AUTHDB, user_id )
-        response = cloudant_client.r_session.get(endpoint)
+        Args:
+            user_ids  (str): The user id to load
+
+        Returns:
+            Dict[str, str]: Returns the user dict with the following fields:
+                            {
+                                'email': str
+                                'password_hash': str
+                            }
+        """
+
+        db = cloudant_client[CL_AUTHDB]
 
         user_dict = {}
+        try:
+            doc = db[user_id]
+            doc.fetch()
 
-        if response.status_code == 200:
-            doc = response.json()
-            user_dict['email'] = doc['email']
-            user_dict['password_hash'] = doc['password_hash']
+            if doc.exists():
+                user_dict['email'] = doc['email']
+                user_dict['password_hash'] = doc['password_hash']
+            
+        except KeyError:
+            pass
 
         return user_dict
 
