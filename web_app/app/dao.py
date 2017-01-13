@@ -124,9 +124,14 @@ class RatingDAO:
                 movie_id = int(row['doc']['_id'].split('/')[1].split('_')[1])
                 rating = float(row['doc']['rating'])
 
-                # if movie_ids filter was provided only return the rating if it is in the list
-                if movie_ids and movie_id in movie_ids:
+                if movie_ids is None:
+                    #  movie_ids filter wasn't provided so return all ratings
                     ratings[movie_id] = rating
+                else:
+                    if movie_id in movie_ids:
+                        # movie_ids filter was provided only return the rating
+                        # if it is in the movie_ids list
+                        ratings[movie_id] = rating
 
         return ratings
 

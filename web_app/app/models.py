@@ -16,10 +16,6 @@ import numpy as np
 from .dao import MovieDAO, RatingDAO, RecommendationDAO, UserDAO, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
 
 
-CL_URL      = app.config['CL_URL']
-CL_MOVIEDB  = app.config['CL_MOVIEDB']
-CL_AUTHDB   = app.config['CL_AUTHDB']
-CL_RATINGDB = app.config['CL_RATINGDB']
 CL_RECOMMENDDB = app.config['CL_RECOMMENDDB']
 
 class CustomJSONEncoder(JSONEncoder):
@@ -118,11 +114,11 @@ class Recommendation:
             recommendations_doc = recommendations_db[user_id]
             movie_ids = [ int(rec[1]) for rec in recommendations_doc['recommendations'] ]
             ratings = [ str(rec[2]) for rec in recommendations_doc['recommendations'] ]
-            recommendation_type = "batch"
+            recommendation_type = "BATCH"
 
         except KeyError:
             ( ratings, movie_ids ) = Recommendation.get_realtime_ratings(user_id, meta_doc)
-            recommendation_type = "realtime"
+            recommendation_type = "REALTIME"
 
         # we have the movie_ids, let's get the movie names
         recommendations = []

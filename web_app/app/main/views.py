@@ -36,29 +36,36 @@ def index():
 @main.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
 
-    rated_movies = Rating.get_ratings(current_user.get_id())
+    user_id = current_user.get_id()
 
-    # the user needs to have rated some movies to be able to receive recommendations
-    if len(rated_movies.keys()) == 0 and current_user.get_id():
-        flash('No Recommendations found for user, please rate some movies.') 
-        return render_template('/main/recommendations.html', recommendations=[], timestamp=None)
-
-    try:
-        timestamp = Recommendation.get_latest_recommendation_timestamp()
-        (recommendation_type, recommendations) = \
-                Recommendation.get_recommendations(current_user.get_id())
-
-    except RecommendationsNotGeneratedException:
-        flash('No recommendations available - the Recommendation process has not run yet.') 
+    if not user_id:
+        flash('Recommendations are only available if you have an account.') 
         return render_template('/main/recommendations.html', recommendations=[])
-    except RecommendationsNotGeneratedForUserException:
-        flash('No Recommendations found for user, please rate some movies.') 
-        return render_template('/main/recommendations.html', recommendations=[], timestamp=timestamp)
 
-    if recommendation_type:
-        flash("Recommendation type: " + recommendation_type)
+    else:
+        rated_movies = Rating.get_ratings(current_user.get_id())
 
-    return render_template('/main/recommendations.html', recommendations=recommendations, timestamp=timestamp)
+        # the user needs to have rated some movies to be able to receive recommendations
+        if len(rated_movies.keys()) == 0 and current_user.get_id():
+            flash('No Recommendations found, please rate some movies.') 
+            return render_template('/main/recommendations.html', recommendations=[], timestamp=None)
+
+        try:
+            timestamp = Recommendation.get_latest_recommendation_timestamp()
+            (recommendation_type, recommendations) = \
+                    Recommendation.get_recommendations(current_user.get_id())
+
+        except RecommendationsNotGeneratedException:
+            flash('No recommendations available - the Recommendation process has not run yet.') 
+            return render_template('/main/recommendations.html', recommendations=[])
+        except RecommendationsNotGeneratedForUserException:
+            flash('No Recommendations found, please rate some movies.') 
+            return render_template('/main/recommendations.html', recommendations=[], timestamp=timestamp)
+
+        if recommendation_type:
+            flash("Recommendation type: " + recommendation_type)
+
+        return render_template('/main/recommendations.html', recommendations=recommendations, timestamp=timestamp)
 
 @main.route('/set_search_string', methods=['POST'])
 def set_search_string():
