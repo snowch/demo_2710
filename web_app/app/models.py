@@ -10,13 +10,10 @@ import requests
 import time
 import urllib
 from . import app, login_manager
-from app.cloudant_db import cloudant_client
 import collections
 import numpy as np
 from .dao import MovieDAO, RatingDAO, RecommendationDAO, UserDAO, RecommendationsNotGeneratedException, RecommendationsNotGeneratedForUserException
 
-
-CL_RECOMMENDDB = app.config['CL_RECOMMENDDB']
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
