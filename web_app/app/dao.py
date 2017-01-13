@@ -7,6 +7,7 @@ from . import app
 from app.cloudant_db import cloudant_client
 from app.redis_db import get_next_user_id
 from typing import List, Dict, Optional
+from cloudant.document import Document
 
 
 RATINGDB_URL = app.config['CL_URL'] + '/' + app.config['CL_RATINGDB']
@@ -120,39 +121,12 @@ class RatingDAO:
 
         id = 'user_{0}/movie_{1}'.format(user_id, movie_id)
 
-        # FIXME: WTF! This can't be the right pattern for delete/create/update???
-        if not rating:
-            try:
-                doc = db[id]
-                doc.fetch()
-                if doc.exists():
-                    doc.delete()
-                    doc.save()
-                print('deleted rating', id)
-            except:
-                pass
-        else:
-            try:
-                # update doc if exists
-                doc = db[id]
-                doc.fetch()
-                if doc.exists():
-                    doc['rating'] = rating 
-                    doc['timestamp'] = current_milli_time()
-                    doc.save()
-                    if doc.exists():
-                        print('updated rating', id)
-
-            except KeyError:
-                # create a new doc
-                data = {
-                    '_id': id,
-                    'rating': rating,
-                    'timestamp': current_milli_time(),
-                    }
-                doc = db.create_document(data)
-                #doc.save()
-                if doc.exists():
-                    print('created rating', id)
-
+        with Document(db, id) as document:
+            if rating:
+                document.update( { 'rating': rating, 'timestamp': current_milli_time() })
+                print('saved/updated rating', id)
+            else:
+                if document.exists():
+                    document.update( { '_deleted': True } )
+                    print('deleted rating', id)
 

@@ -90,10 +90,12 @@ You can run python code from the python REPL, e.g.
 
 ```
 $ cd web_app
-$ export VCAP_SERVICES="{$(cat etc/cloudant_vcap.json),$(cat etc/redis_vcap.json)}"
+$ source venv/bin/activate
+$ source set_vcap.sh
 $ python3.5
->>> from app.dao import DAO
->>> DAO.get_movie_names([1,2,3])
+>>> from app import app
+>>> from app.dao import MovieDAO
+>>> MovieDAO.get_movie_names([1,2,3])
 {1: 'Toy Story (1995)', 2: 'Jumanji (1995)', 3: 'Grumpier Old Men (1995)'}
 >>>
 ```
