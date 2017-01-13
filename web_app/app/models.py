@@ -42,16 +42,7 @@ class Recommendation:
         return RecommendationDAO.get_latest_recommendation_timestamp()
 
     @staticmethod
-    def get_realtime_ratings(user_id, meta_doc):
-
-        # get the product features
-        pf_keys = json.loads(
-                        meta_doc.get_attachment('product_feature_keys', attachment_type='text')
-                        )
-
-        pf_vals = json.loads(
-                        meta_doc.get_attachment('product_feature_vals', attachment_type='text')
-                        )
+    def calculate_ratings(user_id, pf_keys, pf_vals):
 
         Vt = np.matrix(np.asarray(pf_vals))
 
@@ -87,37 +78,24 @@ class Recommendation:
     @staticmethod
     def get_recommendations(user_id):
 
-        recommendation_type = None
+        ret = RecommendationDAO.get_recommendations_or_product_features(user_id)
 
-        if not current_user.is_authenticated:
-            return (recommendation_type, [])
+        if ret['type'] == 'als_recommendations':
 
-        # get recommendation_metadata document with last run details
-        try:
-            meta_db = cloudant_client[CL_RECOMMENDDB]
-            meta_doc = meta_db['recommendation_metadata']
-            meta_doc.fetch()
-        except KeyError:
-            print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
-            raise RecommendationsNotGeneratedException
-       
-        # get name of db for latest recommendations
-        try:
-            latest_recommendations_db = meta_doc['latest_db']
-            recommendations_db = cloudant_client[latest_recommendations_db]
-        except KeyError:
-            print('recommendationsdb not found', latest_recommendations_db)
-            raise RecommendationsNotGeneratedException
+            movie_ids = list(ret['recommendations'].keys())
+            ratings = list(ret['recommendations'].values())
 
-        # get recommendations for user
-        try:
-            recommendations_doc = recommendations_db[user_id]
-            movie_ids = [ int(rec[1]) for rec in recommendations_doc['recommendations'] ]
-            ratings = [ str(rec[2]) for rec in recommendations_doc['recommendations'] ]
             recommendation_type = "BATCH"
-
-        except KeyError:
-            ( ratings, movie_ids ) = Recommendation.get_realtime_ratings(user_id, meta_doc)
+        else:
+      
+            pf_keys = ret['pf_keys']
+            pf_vals = ret['pf_vals']
+            
+            ( ratings, movie_ids ) = Recommendation.calculate_ratings(
+                                                                    user_id, 
+                                                                    pf_keys, 
+                                                                    pf_vals
+                                                                    )
             recommendation_type = "REALTIME"
 
         # we have the movie_ids, let's get the movie names
@@ -128,7 +106,6 @@ class Recommendation:
             recommendations.append(recommendation)
 
         return (recommendation_type, recommendations)
-
 
     def as_dict(self):
         return dict(

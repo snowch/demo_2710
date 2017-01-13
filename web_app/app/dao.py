@@ -129,7 +129,7 @@ class RatingDAO:
                     ratings[movie_id] = rating
                 else:
                     if movie_id in movie_ids:
-                        # movie_ids filter was provided only return the rating
+                        # movie_ids filter was provided so only return the rating
                         # if it is in the movie_ids list
                         ratings[movie_id] = rating
 
@@ -194,6 +194,75 @@ class RecommendationDAO:
 
         import dateutil.parser
         return dateutil.parser.parse(timestamp_str)
+
+    @staticmethod
+    def get_recommendations_or_product_features(user_id: str) -> Dict:
+        """Get the timestamp that the latest recommendations were generated
+
+        Returns:
+            Dict:
+
+             If the user had rated some movies:
+
+             { 
+                'type'            : 'als_recommendations', 
+                'recommendations' : { movie_id, rating }
+             }
+
+             or, if user had not rated any movies:
+
+             { 
+                'type'    : 'als_product_features', 
+                'pf_vals' : product_feature_values,
+                'pf_keys' : product_feature_keys
+
+             }
+
+        """
+
+        # get recommendation_metadata document with last run details
+        try:
+            meta_db = cloudant_client[CL_RECOMMENDDB]
+            meta_doc = meta_db['recommendation_metadata']
+            meta_doc.fetch()
+        except KeyError:
+            print('recommendation_metadata doc not found in', CL_RECOMMENDDB)
+            raise RecommendationsNotGeneratedException
+       
+        # get name of db for latest recommendations
+        try:
+            latest_recommendations_db = meta_doc['latest_db']
+            recommendations_db = cloudant_client[latest_recommendations_db]
+        except KeyError:
+            print('recommendationsdb not found', latest_recommendations_db)
+            raise RecommendationsNotGeneratedException
+
+        # get recommendations for user
+        try:
+            recommendations_doc = recommendations_db[user_id]
+           
+            recommendations = {}
+            for rec in recommendations_doc['recommendations']: 
+                movie_id = int(rec[1])
+                predicted_rating = float(rec[2])
+                recommendations[movie_id] = predicted_rating
+
+            return { 'type'            : "als_recommendations",
+                     'recommendations' : recommendations }
+
+        except KeyError:
+
+            pf_keys = json.loads(
+                meta_doc.get_attachment('product_feature_keys', attachment_type='text')
+            )
+
+            pf_vals = json.loads(
+                meta_doc.get_attachment('product_feature_vals', attachment_type='text')
+            )
+
+            return { 'type'    : "als_product_features",
+                     'pf_keys' : pf_keys,
+                     'pf_vals' : pf_vals }
    
 class UserDAO:
 
